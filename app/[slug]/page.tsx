@@ -31,7 +31,6 @@ interface IOCFileHash {
 interface IOCs {
   malicious_packages?: IOCPackage[];
   malicious_dependencies?: MaliciousPackage[];
-  malicious_dependencies?: MaliciousPackage[];
 
   file_hashes?: IOCFileHash[];
   crypto_wallets?: string[];
