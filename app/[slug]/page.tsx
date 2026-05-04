@@ -65,16 +65,19 @@ interface Remediation {
 
 interface Incident {
   id: string;
-  package_name: string;
+  package: string;
   ecosystem: string;
   cve: string;
   ghsa: string;
-  confidence: string;
+  discovered: string;
+  reported: string;
+  status: string;
+  confidence_level: string;
   cvss: CVSS;
-  attack_metrics: AttackMetrics;
+  attack_mechanics: AttackMetrics;
   description: string;
   iocs: IOCs;
-  impact: Impact;
+  impact_statistics: Impact;
   sources: Source[];
   attribution?: Attribution;
   remediation: Remediation;
