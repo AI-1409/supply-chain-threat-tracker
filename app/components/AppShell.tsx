@@ -147,15 +147,10 @@ export default function AppShell({
         <div className="flex-1 flex flex-col">
           {/* Top Header */}
           <header className="border-b border-[var(--lsd-border)] bg-[var(--lsd-background)]">
-            <div className="flex h-16 items-center justify-between px-6">
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--lsd-text-primary)]">
-                  Supply Chain Threat Tracker
-                </h1>
-                <p className="text-sm text-[var(--lsd-text-secondary)]">
-                  Real-time monitoring of supply chain security threats
-                </p>
-              </div>
+            <div className="flex h-16 items-center justify-center px-6">
+              <h1 className="text-2xl font-bold text-[var(--lsd-text-primary)]">
+                Supply Chain Threat Tracker
+              </h1>
             </div>
           </header>
 

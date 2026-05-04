@@ -30,7 +30,7 @@ export default function IncidentDialog({ open, onOpenChange, incident }: Inciden
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh]" showCloseButton={false}>
         <DialogHeader>
-          <div className="flex items-start justify-between w-full">
+          <div className="flex items-center justify-between w-full">
             <DialogTitle className="text-xl">{incident.id}</DialogTitle>
             <div className="flex items-center gap-2">
               <Link
@@ -39,7 +39,7 @@ export default function IncidentDialog({ open, onOpenChange, incident }: Inciden
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--lsd-primary)] transition-colors"
               >
-                <span className="hidden sm:inline">Open in new tab</span>
+                <span>Open in new tab</span>
                 <ArrowSquareOut size={16} />
               </Link>
               <DialogClose asChild>
