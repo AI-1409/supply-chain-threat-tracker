@@ -13,9 +13,9 @@ import {
   TabsList,
   TabsTrigger,
 } from '@nipsys/lsd';
-import Link from 'next/link';
 import { useState } from 'react';
 import type { Incident } from '../../data/types';
+import IncidentDialog from './IncidentDialog';
 
 const ECOSYSTEM_TABS = ['All', 'npm', 'PyPI', 'RubyGems', 'crates.io'] as const;
 
@@ -53,14 +53,26 @@ function getCVSSSeverity(score: number): string {
 
 export default function IncidentDashboard({ incidents }: IncidentDashboardProps) {
   const [activeTab, setActiveTab] = useState<string>('All');
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const filteredIncidents =
     activeTab === 'All'
       ? incidents
       : incidents.filter(incident => incident.ecosystem === activeTab);
 
+  function handleIncidentClick(incident: Incident) {
+    setSelectedIncident(incident);
+    setIsDialogOpen(true);
+  }
+
   return (
     <>
+      <IncidentDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        incident={selectedIncident}
+      />
       {/* Stats Summary */}
       <section className="mb-[var(--lsd-spacing-large)]">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-[var(--lsd-spacing-base)]">
@@ -137,36 +149,38 @@ export default function IncidentDashboard({ incidents }: IncidentDashboardProps)
                   : incident.cvss.base_score;
 
               return (
-                <Link key={incident.id} href={incident.id} className="block">
-                  <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-[var(--lsd-border)]">
-                    <CardHeader>
-                      <CardTitle className="text-xl">{incident.package}</CardTitle>
-                      <CardDescription>
-                        {incident.id} · {incident.ecosystem}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        <Badge variant={getCVSSColor(baseScore)} size="sm">
-                          {getCVSSSeverity(baseScore)} ({baseScore})
-                        </Badge>
-                        <Badge variant={getConfidenceColor(incident.confidence_level)} size="sm">
-                          {incident.confidence_level}
-                        </Badge>
-                      </div>
-                      {incident.attack_mechanics.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {incident.attack_mechanics.description}
-                        </p>
-                      )}
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outlined" size="sm" className="w-full">
-                        View Details →
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </Link>
+                <Card
+                  key={incident.id}
+                  onClick={() => handleIncidentClick(incident)}
+                  className="h-full hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-[var(--lsd-border)]"
+                >
+                  <CardHeader>
+                    <CardTitle className="text-xl">{incident.package}</CardTitle>
+                    <CardDescription>
+                      {incident.id} · {incident.ecosystem}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <Badge variant={getCVSSColor(baseScore)} size="sm">
+                        {getCVSSSeverity(baseScore)} ({baseScore})
+                      </Badge>
+                      <Badge variant={getConfidenceColor(incident.confidence_level)} size="sm">
+                        {incident.confidence_level}
+                      </Badge>
+                    </div>
+                    {incident.attack_mechanics.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {incident.attack_mechanics.description}
+                      </p>
+                    )}
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outlined" size="sm" className="w-full">
+                      View Details →
+                    </Button>
+                  </CardFooter>
+                </Card>
               );
             })}
           </div>
