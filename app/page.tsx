@@ -4,18 +4,6 @@ import IncidentDashboard from './components/IncidentDashboard';
 export default function Page() {
   return (
     <main className="min-h-screen bg-[var(--lsd-background)] p-[var(--lsd-spacing-largest)]">
-      {/* Decorative Grid Background */}
-      <div
-        className="fixed inset-0 opacity-5 pointer-events-none"
-        style={{
-          backgroundImage: `
-          linear-gradient(to right, var(--lsd-border) 1px, transparent 1px),
-          linear-gradient(to bottom, var(--lsd-border) 1px, transparent 1px)
-        `,
-          backgroundSize: '64px 64px',
-        }}
-      />
-
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
         <section className="mb-[var(--lsd-spacing-largest)] text-center">

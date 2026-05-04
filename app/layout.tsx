@@ -27,7 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
+    <html
+      lang="en"
+      data-theme="terracotta"
+      className={`${displayFont.variable} ${bodyFont.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
