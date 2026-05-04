@@ -10,7 +10,9 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from '@nipsys/lsd';
-import { Package } from '@phosphor-icons/react';
+import { List, Package } from '@phosphor-icons/react';
+import { useEffect, useState } from 'react';
+import { useMobile } from '../hooks/use-mobile';
 
 const ECOSYSTEMS = ['All', 'npm', 'PyPI', 'RubyGems', 'crates.io'] as const;
 
@@ -27,11 +29,65 @@ export default function AppShell({
   onEcosystemChange,
   incidents,
 }: AppShellProps) {
+  const isMobile = useMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const ecosystemCounts = ECOSYSTEMS.map(ecosystem => {
+    if (ecosystem === 'All') {
+      return ecosystem;
+    }
+    const count = incidents.filter(i => i.ecosystem === ecosystem).length;
+    return count > 0 ? ecosystem : null;
+  }).filter(e => e !== null);
+
+  const handleEcosystemChange = (ecosystem: string) => {
+    onEcosystemChange(ecosystem);
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isMobile && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  }, [isMobile, isSidebarOpen]);
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-[var(--lsd-background)]">
-        {/* Left Sidebar */}
-        <Sidebar className="border-r border-[var(--lsd-border)]">
+        {/* Mobile Toggle Button - Only shows on mobile */}
+        {isMobile && (
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-[var(--lsd-background)] border border-[var(--lsd-border)] shadow-sm hover:bg-[var(--lsd-muted)] transition-colors lg:hidden"
+            aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+          >
+            <List size={24} weight="bold" className="text-[var(--lsd-text-primary)]" />
+          </button>
+        )}
+
+        {/* Mobile Overlay */}
+        {isMobile && isSidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(false)}
+            onKeyDown={e => {
+              if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                setIsSidebarOpen(false);
+              }
+            }}
+            aria-label="Close sidebar"
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          />
+        )}
+
+        <Sidebar
+          className={`border-r border-[var(--lsd-border)] transition-transform duration-300 ease-in-out ${
+            isMobile ? (isSidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'
+          } fixed lg:relative z-50 h-full`}
+        >
           <div className="flex h-full w-[280px] flex-col">
             {/* Sidebar Header */}
             <div className="flex h-16 items-center border-b border-[var(--lsd-border)] px-6">
@@ -48,16 +104,18 @@ export default function AppShell({
                   <SidebarGroupLabel>Ecosystems</SidebarGroupLabel>
                   <SidebarMenu>
                     {ECOSYSTEMS.map(ecosystem => {
+                      if (!ecosystemCounts.includes(ecosystem) && ecosystem !== 'All') {
+                        return null;
+                      }
                       const count =
                         ecosystem === 'All'
                           ? incidents.length
                           : incidents.filter(i => i.ecosystem === ecosystem).length;
-
                       return (
                         <SidebarMenuItem key={ecosystem}>
                           <SidebarMenuButton
                             isActive={selectedEcosystem === ecosystem}
-                            onClick={() => onEcosystemChange(ecosystem)}
+                            onClick={() => handleEcosystemChange(ecosystem)}
                             className="w-full justify-between"
                           >
                             <span>{ecosystem}</span>

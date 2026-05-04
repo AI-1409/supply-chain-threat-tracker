@@ -326,7 +326,7 @@ export default function IncidentDialogContent({ incident }: { incident: Incident
           <CardTitle>Indicators of Compromise (IOCs)</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion type="multiple">
+          <Accordion type="multiple" defaultValue={[]}>
             {incident.iocs.malicious_packages && incident.iocs.malicious_packages.length > 0 && (
               <AccordionItem value="malicious_packages">
                 <AccordionTrigger>

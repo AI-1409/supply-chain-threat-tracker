@@ -1,7 +1,7 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@nipsys/lsd';
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@nipsys/lsd';
+import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import type { Incident } from '../../data/types';
 import IncidentDialogContent from './IncidentDialogContent';
@@ -21,19 +21,31 @@ export default function IncidentDialog({ open, onOpenChange, incident }: Inciden
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh]">
+      <DialogContent className="max-w-4xl max-h-[85vh]" showCloseButton={false}>
         <DialogHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between w-full">
             <DialogTitle className="text-xl">{incident.id}</DialogTitle>
-            <Link
-              href={incident.id}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--lsd-primary)] transition-colors ml-4"
-            >
-              <span className="hidden sm:inline">Open in new tab</span>
-              <ArrowSquareOut size={16} />
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/${incident.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--lsd-primary)] transition-colors"
+              >
+                <span className="hidden sm:inline">Open in new tab</span>
+                <ArrowSquareOut size={16} />
+              </Link>
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  className="flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground hover:opacity-100 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+                  aria-label="Close dialog"
+                >
+                  <X size={16} />
+                  <span className="sr-only">Close</span>
+                </button>
+              </DialogClose>
+            </div>
           </div>
         </DialogHeader>
         <IncidentDialogContent incident={incident} />
