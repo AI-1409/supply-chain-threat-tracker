@@ -39,10 +39,10 @@ incidents:
     sources:
       - type: "github_advisory"
         url: "https://github.com/advisories/GHSA-78hj-6q3m-x2c5"
-        reliability: "confirmed"
+        reliability: "high"
       - type: "vendor_blog"
         url: "https://www.npmjs.com/advisories/1135"
-        reliability: "confirmed"
+        reliability: "high"
     remediation:
       affected_versions: "<3.3.8"
       safe_versions: ">=3.3.8"
@@ -85,7 +85,7 @@ incidents:
     sources:
       - type: "github_advisory"
         url: "https://github.com/advisories/GHSA-f5f5-w393-g2h8"
-        reliability: "confirmed"
+        reliability: "high"
       - type: "security_blog"
         url: "https://blog.example.com/ctx-pypi-attack"
         reliability: "high_confidence"
@@ -189,10 +189,10 @@ incidents:
     sources:
       - type: "github_advisory"
         url: "https://github.com/advisories/GHSA-75vf-2gwh-8h2j"
-        reliability: "confirmed"
+        reliability: "high"
       - type: "cisa_kev"
         url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
-        reliability: "confirmed"
+        reliability: "high"
     remediation:
       affected_versions: "0.7.29, 0.8.0, 1.0.0"
       safe_versions: "≥0.7.30, ≥0.8.1, ≥1.0.1"
@@ -245,7 +245,7 @@ incidents:
     sources:
       - type: "github_advisory"
         url: "https://github.com/advisories/GHSA-p7h8-q9r4-s5t6"
-        reliability: "confirmed"
+        reliability: "high"
       - type: "security_blog"
         url: "https://threatresearch.example.com/colorizator-attack"
         reliability: "medium"

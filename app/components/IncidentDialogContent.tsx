@@ -116,14 +116,6 @@ export default function IncidentDialogContent({ incident }: { incident: Incident
               <div className="text-sm font-semibold">{incident.discovered}</div>
             </div>
           </div>
-          {incident.attack_mechanics.description && (
-            <div className="mt-4">
-              <div className="text-sm font-medium text-muted-foreground mb-2">Details</div>
-              <p className="text-sm text-[var(--lsd-text-primary)] leading-relaxed">
-                {incident.attack_mechanics.description}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
