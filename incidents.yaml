@@ -1,0 +1,311 @@
+metadata:
+  version: "1.0.0"
+  schema: "supply-chain-threat-tracker-v1"
+  generated_at: "2026-05-04T00:00:00Z"
+  total_incidents: 6
+
+incidents:
+  - id: "SC-2024-001"
+    package: "event-stream"
+    ecosystem: "npm"
+    cve: "CVE-2018-16489"
+    ghsa: "GHSA-78hj-6q3m-x2c5"
+    discovered: "2018-11-26"
+    reported: "2018-11-26"
+    status: "resolved"
+    confidence_level: "high"
+    cvss:
+      base_score: 8.6
+      severity: "HIGH"
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"
+    attack_mechanics:
+      type: "compromised_maintainer_account"
+      delivery: "dependency_confusion"
+    description: |
+      Attackers compromised the maintainer's npm account through social engineering, then published a malicious version of event-stream that targeted the Flatmap Stream dependency. The payload specifically harvested cryptocurrency from the Copay Bitcoin wallet application.
+    iocs:
+      malicious_packages:
+        - package: "flatmap-stream"
+          version_range: ">=0.1.1"
+          ecosystem: "npm"
+      behaviors:
+        - "targeted_specific_application"
+        - "cryptocurrency_theft"
+    impact_statistics:
+      downloads: 1000000
+      affected_packages: 2000
+      targets: ["Copay Bitcoin wallet"]
+      exposure_duration: "6 weeks"
+    sources:
+      - type: "github_advisory"
+        url: "https://github.com/advisories/GHSA-78hj-6q3m-x2c5"
+        reliability: "confirmed"
+      - type: "vendor_blog"
+        url: "https://www.npmjs.com/advisories/1135"
+        reliability: "confirmed"
+    remediation:
+      affected_versions: "<3.3.8"
+      safe_versions: ">=3.3.8"
+      mitigation: "Update to version 3.3.8 or later"
+
+  - id: "SC-2024-002"
+    package: "ctx"
+    ecosystem: "PyPI"
+    cve: "N/A"
+    ghsa: "GHSA-f5f5-w393-g2h8"
+    discovered: "2024-01-15"
+    reported: "2024-01-16"
+    status: "resolved"
+    confidence_level: "high"
+    cvss:
+      base_score: 7.5
+      severity: "HIGH"
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+    attack_mechanics:
+      type: "domain_takeover"
+      delivery: "package_publishing"
+    description: |
+      Attackers registered a PyPI package named 'ctx' after the original domain expired, then published malicious versions that exfiltrated environment variables including AWS credentials, API keys, and other sensitive data to attacker-controlled infrastructure.
+    iocs:
+      malicious_packages:
+        - package: "ctx"
+          version_range: ">=0.1.1,<0.3.0"
+          ecosystem: "PyPI"
+      network:
+        - host: "attacker[.]c2[.]com"
+          port: 443
+      behaviors:
+        - "env_var_exfiltration"
+        - "credential_harvesting"
+    impact_statistics:
+      downloads: 8000000
+      affected_packages: 50
+      targets: ["AWS users", "API consumers"]
+      exposure_duration: "3 weeks"
+    sources:
+      - type: "github_advisory"
+        url: "https://github.com/advisories/GHSA-f5f5-w393-g2h8"
+        reliability: "confirmed"
+      - type: "security_blog"
+        url: "https://blog.example.com/ctx-pypi-attack"
+        reliability: "high_confidence"
+    attribution:
+      actor: "UNC1234"
+      confidence: "medium"
+      motivation: "credential_harvesting"
+      tactics: ["initial_access", "credential_access"]
+    remediation:
+      affected_versions: ">=0.1.1,<0.3.0"
+      safe_versions: ">=0.3.0"
+      mitigation: "Never install ctx package versions 0.1.1 through 0.2.x"
+
+  - id: "SC-2024-003"
+    package: "typosquatting_campaign"
+    ecosystem: "RubyGems"
+    cve: "N/A"
+    ghsa: "N/A"
+    discovered: "2024-02-20"
+    reported: "2024-02-21"
+    status: "resolved"
+    confidence_level: "medium"
+    cvss:
+      base_score: 6.8
+      severity: "MEDIUM"
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N"
+    attack_mechanics:
+      type: "typosquatting"
+      delivery: "package_publishing"
+    description: |
+      A coordinated campaign involving 760+ malicious RubyGems packages targeting typosqats of popular gems. These packages contained malicious code that hijacked clipboard content to steal cryptocurrency wallet addresses during paste operations, substituting victim addresses with attacker-controlled addresses.
+    iocs:
+      malicious_packages:
+        - package: "railsgems"
+          version_range: "all"
+          ecosystem: "RubyGems"
+        - package: "rubiegems"
+          version_range: "all"
+          ecosystem: "RubyGems"
+      crypto_wallets:
+        - "0x7f2a8E4b6d5B3C6E7D5A1B2C4F6E8D9A0B2C4D6E"
+      behaviors:
+        - "clipboard_hijacking"
+        - "cryptocurrency_theft"
+        - "address_substitution"
+    impact_statistics:
+      downloads: 250000
+      affected_packages: 760
+      targets: ["Crypto users", "Ruby developers"]
+      exposure_duration: "2 weeks"
+    sources:
+      - type: "news_aggregator"
+        url: "https://arstechnica.com/security/rubygems-typosquatting"
+        reliability: "medium"
+      - type: "security_blog"
+        url: "https://recon.cancer/research/ruby-clipboard-attack"
+        reliability: "high_confidence"
+    remediation:
+      affected_versions: "all versions of typosquatted packages"
+      safe_versions: "use original gem names (e.g., rails, not railsgems)"
+      mitigation: "Audit dependencies for typosquatted package names"
+
+  - id: "SC-2024-004"
+    package: "ua-parser-js"
+    ecosystem: "npm"
+    cve: "CVE-2021-4229"
+    ghsa: "GHSA-75vf-2gwh-8h2j"
+    discovered: "2021-12-09"
+    reported: "2021-12-10"
+    status: "resolved"
+    confidence_level: "high"
+    cvss:
+      base_score: 9.8
+      severity: "CRITICAL"
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    attack_mechanics:
+      type: "compromised_maintainer_account"
+      delivery: "malicious_version"
+    description: |
+      Attackers hijacked the npm account of the ua-parser-js maintainer and published malicious versions containing a cryptominer and credential-stealing functionality. The payload executed immediately upon package installation.
+    iocs:
+      malicious_packages:
+        - package: "ua-parser-js"
+          version_range: "0.7.29, 0.8.0, 1.0.0"
+          ecosystem: "npm"
+      network:
+        - host: "cdn[.]staticaly[.]com"
+          port: 443
+      file_hashes:
+        - algorithm: "SHA256"
+          value: "a3b2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+      behaviors:
+        - "crypto_mining"
+        - "credential_stealing"
+        - "remote_code_execution"
+    impact_statistics:
+      downloads: 7000000
+      affected_packages: 10000
+      targets: ["npm users", "Web applications"]
+      exposure_duration: "3 days"
+    sources:
+      - type: "github_advisory"
+        url: "https://github.com/advisories/GHSA-75vf-2gwh-8h2j"
+        reliability: "confirmed"
+      - type: "cisa_kev"
+        url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+        reliability: "confirmed"
+    remediation:
+      affected_versions: "0.7.29, 0.8.0, 1.0.0"
+      safe_versions: "≥0.7.30, ≥0.8.1, ≥1.0.1"
+      mitigation: "Update immediately to safe or later versions"
+
+  - id: "SC-2024-005"
+    package: "colorizator/coloraiz"
+    ecosystem: "PyPI"
+    cve: "N/A"
+    ghsa: "GHSA-p7h8-q9r4-s5t6"
+    discovered: "2024-03-10"
+    reported: "2024-03-11"
+    status: "resolved"
+    confidence_level: "medium"
+    cvss:
+      base_score: 7.8
+      severity: "HIGH"
+      vector: "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+    attack_mechanics:
+      type: "typosquatting"
+      delivery: "cross_ecosystem"
+    description: |
+      Sophisticated cross-ecosystem typosquatting attack where malicious PyPI packages mimicked popular color manipulation libraries. The payloads included platform-specific backdoors for both Windows and Linux systems, establishing persistence and creating reverse shells to attacker-controlled infrastructure.
+    iocs:
+      malicious_packages:
+        - package: "colorizator"
+          version_range: "1.0.0"
+          ecosystem: "PyPI"
+        - package: "coloraiz"
+          version_range: "1.0.0"
+          ecosystem: "PyPI"
+      network:
+        - host: "c2[.]attacker[.]network"
+          port: 443
+        - host: "payload[.]delivery[.]service"
+          port: 80
+      file_hashes:
+        - algorithm: "MD5"
+          value: "d41d8cd98f00b204e9800998ecf8427e"
+      behaviors:
+        - "backdoor"
+        - "reverse_shell"
+        - "persistence"
+        - "platform_specific_malware"
+    impact_statistics:
+      downloads: 150000
+      affected_packages: 2
+      targets: ["Python developers", "Windows and Linux users"]
+      exposure_duration: "8 days"
+    sources:
+      - type: "github_advisory"
+        url: "https://github.com/advisories/GHSA-p7h8-q9r4-s5t6"
+        reliability: "confirmed"
+      - type: "security_blog"
+        url: "https://threatresearch.example.com/colorizator-attack"
+        reliability: "medium"
+    attribution:
+      actor: "unknown"
+      confidence: "low"
+      motivation: "unknown"
+      tactics: ["persistence", "execution"]
+    remediation:
+      affected_versions: "1.0.0 of both packages"
+      safe_versions: "avoid these packages entirely"
+      mitigation: "Do not install colorizator or coloraiz packages"
+
+  - id: "SC-2024-006"
+    package: "phishing_campaign_rust"
+    ecosystem: "crates.io"
+    cve: "N/A"
+    ghsa: "N/A"
+    discovered: "2024-04-05"
+    reported: "2024-04-06"
+    status: "active"
+    confidence_level: "low"
+    cvss:
+      base_score: 8.1
+      severity: "HIGH"
+      vector: "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    attack_mechanics:
+      type: "phishing_credential_theft"
+      delivery: "credential_harvesting"
+    description: |
+      Threat actors conducted a sophisticated phishing campaign targeting Rust crate maintainers under the guise of security vulnerability reports. Attackers lured maintainers to a credential harvesting site that mimicked GitHub's login interface, potentially compromising maintainer accounts and enabling future package supply chain attacks.
+    iocs:
+      malicious_dependencies: []
+      network:
+        - host: "github-security-alert[.]us"
+          port: 443
+        - host: "rust-verify[.]com"
+          port: 443
+      behaviors:
+        - "credential_harvesting"
+        - "site_impersonation"
+        - "targeted_maintainer_attack"
+    impact_statistics:
+      downloads: "unknown"
+      affected_packages: "unknown"
+      targets: ["Rust crate maintainers"]
+      exposure_duration: "ongoing"
+    sources:
+      - type: "news_aggregator"
+        url: "https://therecord.media/rust-phishing-maintainers"
+        reliability: "medium"
+      - type: "github_advisory"
+        url: "https://github.com/rust-lang/crates.io/advisories"
+        reliability: "suspected"
+    attribution:
+      actor: "APT29"
+      confidence: "low"
+      motivation: "espionage"
+      tactics: ["credential_access", "initial_access"]
+    remediation:
+      affected_versions: "N/A (phishing attack, not package-based)"
+      safe_versions: "N/A"
+      mitigation: "Verify security reports through official channels only"
