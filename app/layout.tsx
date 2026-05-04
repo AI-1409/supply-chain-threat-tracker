@@ -30,7 +30,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="terracotta"
-      className={`${displayFont.variable} ${bodyFont.variable}`}
+      className={`${displayFont.variable} ${bodyFont.variable} dark`}
     >
       <body>{children}</body>
     </html>
