@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@nipsys/lsd';
 import { ArrowSquareOut } from '@phosphor-icons/react';
+import Link from 'next/link';
 import type { Incident } from '../../data/types';
 import IncidentDialogContent from './IncidentDialogContent';
 
@@ -24,15 +25,15 @@ export default function IncidentDialog({ open, onOpenChange, incident }: Inciden
         <DialogHeader>
           <div className="flex items-start justify-between">
             <DialogTitle className="text-xl">{incident.id}</DialogTitle>
-            <a
-              href={`/${incident.id}`}
+            <Link
+              href={incident.id}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-[var(--lsd-primary)] transition-colors ml-4"
             >
               <span className="hidden sm:inline">Open in new tab</span>
               <ArrowSquareOut size={16} />
-            </a>
+            </Link>
           </div>
         </DialogHeader>
         <IncidentDialogContent incident={incident} />
