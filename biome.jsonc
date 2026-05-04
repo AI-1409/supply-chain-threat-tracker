@@ -21,7 +21,11 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noUnknownAtRules": "info"
+        "noUnknownAtRules": "info",
+        "noArrayIndexKey": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "warn"
       },
       "complexity": {
         "noImportantStyles": "off"

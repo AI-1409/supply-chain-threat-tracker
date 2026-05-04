@@ -1,8 +1,9 @@
-import IncidentDetail from './IncidentDetail';
-import { notFound } from 'next/navigation';
+import fs from 'node:fs';
+import path from 'node:path';
 import * as yaml from 'js-yaml';
-import fs from 'fs';
-import path from 'path';
+import { notFound } from 'next/navigation';
+import type { MaliciousPackage } from '../../data/types';
+import IncidentDetail from './IncidentDetail';
 
 interface CVSS {
   base_score: number;
@@ -22,11 +23,6 @@ interface IOCPackage {
   ecosystem: string;
 }
 
-interface IOCNetwork {
-  host: string;
-  port: number;
-}
-
 interface IOCFileHash {
   algorithm: string;
   value: string;
@@ -34,8 +30,9 @@ interface IOCFileHash {
 
 interface IOCs {
   malicious_packages?: IOCPackage[];
-  malicious_dependencies?: any[];
-  network?: IOCNetwork[];
+  malicious_dependencies?: MaliciousPackage[];
+  malicious_dependencies?: MaliciousPackage[];
+
   file_hashes?: IOCFileHash[];
   crypto_wallets?: string[];
   behaviors?: string[];
@@ -113,7 +110,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ slug:
   const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
   const data = yaml.load(yamlContent) as IncidentData;
 
-  const incident = data.incidents.find((inc) => inc.id === slug);
+  const incident = data.incidents.find(inc => inc.id === slug);
 
   if (!incident) {
     notFound();

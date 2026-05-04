@@ -1,22 +1,20 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@nipsys/lsd';
-import { Badge } from '@nipsys/lsd';
-import { Button } from '@nipsys/lsd';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@nipsys/lsd';
+import { useRouter } from 'next/navigation';
+import type { MaliciousPackage } from '../../data/types';
 
 interface CVSS {
   base_score: number;
@@ -48,7 +46,7 @@ interface IOCFileHash {
 
 interface IOCs {
   malicious_packages?: IOCPackage[];
-  malicious_dependencies?: any[];
+  malicious_dependencies?: MaliciousPackage[];
   network?: IOCNetwork[];
   file_hashes?: IOCFileHash[];
   crypto_wallets?: string[];
@@ -101,8 +99,13 @@ interface Incident {
 export default function IncidentDetail({ incident }: { incident: Incident }) {
   const router = useRouter();
 
-  function getSeverityColor(severity: string): 'info' | 'filled' | 'outlined' | 'destructive' | 'warning' | 'success' {
-    const colors: Record<string, 'info' | 'filled' | 'outlined' | 'destructive' | 'warning' | 'success'> = {
+  function getSeverityColor(
+    severity: string
+  ): 'info' | 'filled' | 'outlined' | 'destructive' | 'warning' | 'success' {
+    const colors: Record<
+      string,
+      'info' | 'filled' | 'outlined' | 'destructive' | 'warning' | 'success'
+    > = {
       CRITICAL: 'destructive',
       HIGH: 'warning',
       MEDIUM: 'info',
@@ -123,11 +126,7 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <Button
-        variant="ghost"
-        onClick={() => router.push('/')}
-        className="mb-6"
-      >
+      <Button variant="ghost" onClick={() => router.push('/')} className="mb-6">
         ← Back to Dashboard
       </Button>
 
@@ -149,15 +148,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               <Badge variant={getSeverityColor(incident.cvss.severity)}>
                 {incident.cvss.severity} ({incident.cvss.base_score})
               </Badge>
-              <Badge variant={getConfidenceColor(incident.confidence)}>
-                {incident.confidence}
-              </Badge>
-              {incident.cve !== 'N/A' && (
-                <Badge variant="outlined">{incident.cve}</Badge>
-              )}
-              {incident.ghsa !== 'N/A' && (
-                <Badge variant="outlined">{incident.ghsa}</Badge>
-              )}
+              <Badge variant={getConfidenceColor(incident.confidence)}>{incident.confidence}</Badge>
+              {incident.cve !== 'N/A' && <Badge variant="outlined">{incident.cve}</Badge>}
+              {incident.ghsa !== 'N/A' && <Badge variant="outlined">{incident.ghsa}</Badge>}
             </div>
           </CardContent>
         </Card>
@@ -181,11 +174,15 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Attack Type</div>
-                <div className="text-sm font-semibold capitalize">{incident.attack_metrics.type.replace(/_/g, ' ')}</div>
+                <div className="text-sm font-semibold capitalize">
+                  {incident.attack_metrics.type.replace(/_/g, ' ')}
+                </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Delivery Method</div>
-                <div className="text-sm font-semibold capitalize">{incident.attack_metrics.delivery.replace(/_/g, ' ')}</div>
+                <div className="text-sm font-semibold capitalize">
+                  {incident.attack_metrics.delivery.replace(/_/g, ' ')}
+                </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Discovered</div>
@@ -201,7 +198,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
             <CardTitle>CVSS Vector</CardTitle>
           </CardHeader>
           <CardContent>
-            <code className="text-xs bg-muted px-3 py-2 rounded block break-all">{incident.cvss.vector}</code>
+            <code className="text-xs bg-muted px-3 py-2 rounded block break-all">
+              {incident.cvss.vector}
+            </code>
           </CardContent>
         </Card>
 
@@ -215,7 +214,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               {/* Malicious Packages */}
               {incident.iocs.malicious_packages && incident.iocs.malicious_packages.length > 0 && (
                 <AccordionItem value="malicious-packages">
-                  <AccordionTrigger>Malicious Packages ({incident.iocs.malicious_packages.length})</AccordionTrigger>
+                  <AccordionTrigger>
+                    Malicious Packages ({incident.iocs.malicious_packages.length})
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-3">
                       {incident.iocs.malicious_packages.map((pkg, idx) => (
@@ -235,11 +236,16 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               {/* Network IOCs */}
               {incident.iocs.network && incident.iocs.network.length > 0 && (
                 <AccordionItem value="network">
-                  <AccordionTrigger>Network Indicators ({incident.iocs.network.length})</AccordionTrigger>
+                  <AccordionTrigger>
+                    Network Indicators ({incident.iocs.network.length})
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
                       {incident.iocs.network.map((net, idx) => (
-                        <div key={idx} className="bg-muted/50 p-3 rounded flex justify-between items-center">
+                        <div
+                          key={idx}
+                          className="bg-muted/50 p-3 rounded flex justify-between items-center"
+                        >
                           <code className="text-sm">{net.host}</code>
                           <Badge variant="info">Port {net.port}</Badge>
                         </div>
@@ -252,12 +258,16 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               {/* File Hashes */}
               {incident.iocs.file_hashes && incident.iocs.file_hashes.length > 0 && (
                 <AccordionItem value="file-hashes">
-                  <AccordionTrigger>File Hashes ({incident.iocs.file_hashes.length})</AccordionTrigger>
+                  <AccordionTrigger>
+                    File Hashes ({incident.iocs.file_hashes.length})
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
                       {incident.iocs.file_hashes.map((hash, idx) => (
                         <div key={idx} className="bg-muted/50 p-3 rounded">
-                          <div className="text-xs font-medium text-muted-foreground mb-1">{hash.algorithm}</div>
+                          <div className="text-xs font-medium text-muted-foreground mb-1">
+                            {hash.algorithm}
+                          </div>
                           <code className="text-xs break-all">{hash.value}</code>
                         </div>
                       ))}
@@ -269,11 +279,15 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               {/* Crypto Wallets */}
               {incident.iocs.crypto_wallets && incident.iocs.crypto_wallets.length > 0 && (
                 <AccordionItem value="crypto-wallets">
-                  <AccordionTrigger>Cryptocurrency Wallets ({incident.iocs.crypto_wallets.length})</AccordionTrigger>
+                  <AccordionTrigger>
+                    Cryptocurrency Wallets ({incident.iocs.crypto_wallets.length})
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
                       {incident.iocs.crypto_wallets.map((wallet, idx) => (
-                        <code key={idx} className="block bg-muted/50 p-3 rounded text-xs break-all">{wallet}</code>
+                        <code key={idx} className="block bg-muted/50 p-3 rounded text-xs break-all">
+                          {wallet}
+                        </code>
                       ))}
                     </div>
                   </AccordionContent>
@@ -283,7 +297,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               {/* Behaviors */}
               {incident.iocs.behaviors && incident.iocs.behaviors.length > 0 && (
                 <AccordionItem value="behaviors">
-                  <AccordionTrigger>Malicious Behaviors ({incident.iocs.behaviors.length})</AccordionTrigger>
+                  <AccordionTrigger>
+                    Malicious Behaviors ({incident.iocs.behaviors.length})
+                  </AccordionTrigger>
                   <AccordionContent>
                     <div className="flex flex-wrap gap-2">
                       {incident.iocs.behaviors.map((behavior, idx) => (
@@ -326,7 +342,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                 <div className="text-sm font-medium text-muted-foreground">Targets</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {incident.impact.targets.map((target, idx) => (
-                    <Badge key={idx} variant="info">{target}</Badge>
+                    <Badge key={idx} variant="info">
+                      {target}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -357,13 +375,17 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                 {incident.attribution.confidence && (
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">Confidence</div>
-                    <div className="text-sm font-semibold capitalize">{incident.attribution.confidence}</div>
+                    <div className="text-sm font-semibold capitalize">
+                      {incident.attribution.confidence}
+                    </div>
                   </div>
                 )}
                 {incident.attribution.motivation && (
                   <div>
                     <div className="text-sm font-medium text-muted-foreground">Motivation</div>
-                    <div className="text-sm font-semibold capitalize">{incident.attribution.motivation.replace(/_/g, ' ')}</div>
+                    <div className="text-sm font-semibold capitalize">
+                      {incident.attribution.motivation.replace(/_/g, ' ')}
+                    </div>
                   </div>
                 )}
                 {incident.attribution.tactics && incident.attribution.tactics.length > 0 && (
@@ -371,7 +393,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                     <div className="text-sm font-medium text-muted-foreground">Tactics</div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {incident.attribution.tactics.map((tactic, idx) => (
-                        <Badge key={idx} variant="outlined">{tactic}</Badge>
+                        <Badge key={idx} variant="outlined">
+                          {tactic}
+                        </Badge>
                       ))}
                     </div>
                   </div>

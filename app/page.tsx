@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@nipsys/lsd';
-import { Badge } from '@nipsys/lsd';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@nipsys/lsd';
-import { Button } from '@nipsys/lsd';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@nipsys/lsd';
 import typesafeYaml from 'js-yaml';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface CVSS {
   base_score: number;
@@ -85,7 +94,7 @@ export default function Page() {
         const data = typesafeYaml.load(yamlText) as IncidentsData;
 
         // Normalize data types from YAML
-        const normalizedIncidents = (data.incidents || []).map((incident: any) => ({
+        const normalizedIncidents = (data.incidents || []).map((incident: Incident) => ({
           ...incident,
           cvss: {
             ...incident.cvss,
@@ -103,9 +112,10 @@ export default function Page() {
     loadIncidents();
   }, []);
 
-  const filteredIncidents = activeTab === 'All'
-    ? incidents
-    : incidents.filter(incident => incident.ecosystem === activeTab);
+  const filteredIncidents =
+    activeTab === 'All'
+      ? incidents
+      : incidents.filter(incident => incident.ecosystem === activeTab);
 
   const handleCardClick = (incident: Incident) => {
     router.push(`/${incident.package}`);
@@ -152,7 +162,9 @@ export default function Page() {
                 <div className="text-3xl font-bold text-[var(--lsd-destructive)]">
                   {incidents.filter(i => i.cvss.base_score >= 7).length}
                 </div>
-                <div className="text-sm text-[var(--lsd-text-secondary)] mt-1">Critical (CVSS ≥7)</div>
+                <div className="text-sm text-[var(--lsd-text-secondary)] mt-1">
+                  Critical (CVSS ≥7)
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -178,10 +190,12 @@ export default function Page() {
         <section className="mb-[var(--lsd-spacing-large)]">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              {ECOSYSTEM_TABS.map((ecosystem) => (
+              {ECOSYSTEM_TABS.map(ecosystem => (
                 <TabsTrigger key={ecosystem} value={ecosystem}>
                   {ecosystem}
-                  {ecosystem === 'All' ? ` (${incidents.length})` : ` (${incidents.filter(i => i.ecosystem === ecosystem).length})`}
+                  {ecosystem === 'All'
+                    ? ` (${incidents.length})`
+                    : ` (${incidents.filter(i => i.ecosystem === ecosystem).length})`}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -198,14 +212,16 @@ export default function Page() {
         {/* No Results */}
         {!loading && filteredIncidents.length === 0 && (
           <div className="text-center py-[var(--lsd-spacing-largest)]">
-            <div className="text-[var(--lsd-text-secondary)]">No incidents found for this ecosystem.</div>
+            <div className="text-[var(--lsd-text-secondary)]">
+              No incidents found for this ecosystem.
+            </div>
           </div>
         )}
 
         {/* Incident Cards Grid */}
         {!loading && filteredIncidents.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--lsd-spacing-large)]">
-            {filteredIncidents.map((incident) => (
+            {filteredIncidents.map(incident => (
               <Card
                 key={incident.id}
                 className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -213,9 +229,7 @@ export default function Page() {
               >
                 <CardHeader>
                   <div className="flex items-start justify-between gap-[var(--lsd-spacing-smaller)]">
-                    <CardTitle className="text-xl">
-                      {incident.package}
-                    </CardTitle>
+                    <CardTitle className="text-xl">{incident.package}</CardTitle>
                     <Badge variant="destructive" size="sm">
                       CVSS {incident.cvss.base_score}
                     </Badge>
@@ -280,7 +294,7 @@ export default function Page() {
                     variant="ghost"
                     size="sm"
                     className="w-full mt-[var(--lsd-spacing-smallest)]"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       handleCardClick(incident);
                     }}

@@ -1,7 +1,7 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import * as yaml from 'js-yaml';
-import * as fs from 'fs';
-import * as path from 'path';
-import { IncidentDatabase } from '../../data/types';
+import type { IncidentDatabase } from '../../data/types';
 
 // Path to the incidents.yaml file
 const INCIDENTS_FILE_PATH = path.join(process.cwd(), 'data', 'incidents.yaml');
@@ -45,7 +45,9 @@ export function loadIncidents(): IncidentDatabase {
     if (error instanceof Error && error.message.startsWith('Invalid YAML structure')) {
       throw error;
     }
-    throw new Error(`Failed to load incidents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to load incidents: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
