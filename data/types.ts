@@ -14,15 +14,16 @@ export interface Incident {
   ghsa: string;
   discovered: string;
   reported: string;
+  status: string;
   confidence_level: 'low' | 'medium' | 'high';
   cvss: CVSS;
   attack_mechanics: AttackMechanics;
+  description?: string;
   iocs: IOCs;
   impact_statistics: ImpactStatistics;
   sources: Source[];
   attribution: Attribution;
   remediation: Remediation;
-  status: string;
 }
 
 export interface CVSS {
@@ -136,7 +137,9 @@ export interface TimingIOC {
 export interface ImpactStatistics {
   downloads?: number | string;
   affected_direct_packages?: number | string;
+  affected_packages?: number | string;
   affected_major_projects?: string[];
+  targets?: string[];
   specific_target?: string;
   theft_threshold_btc?: number | string;
   theft_threshold_bch?: number | string;
@@ -189,9 +192,9 @@ export interface Remediation {
 
 export interface Metadata {
   version: string;
-  generated: string;
-  note: string;
-  fields_schema: string[];
+  generated?: string;
+  note?: string;
+  fields_schema?: string[];
 }
 
 // Type aliases for backward compatibility

@@ -1,0 +1,138 @@
+Emulate Docker CLI using podman. Create /etc/containers/nodocker to quiet msg.
+import fs from 'node:fs';
+import path from 'node:path';
+import yaml from 'js-yaml';
+import type { Incident, IncidentDatabase, Attribution } from './types';
+
+interface YamlCVSS {
+  base_score: number | string;
+  severity: string;
+  vector: string;
+}
+
+interface YamlAttackMechanics {
+  type: string;
+  delivery: string;
+}
+
+interface YamlIncident {
+  id: string;
+  package: string;
+  ecosystem: string;
+  cve: string;
+  ghsa: string;
+  discovered: string;
+  reported: string;
+  status: string;
+  confidence_level: 'low' | 'medium' | 'high';
+  cvss: YamlCVSS;
+  attack_mechanics: YamlAttackMechanics;
+  description?: string;
+  iocs: any;
+  impact_statistics: any;
+  sources: any[];
+  attribution?: any;
+  remediation: any;
+}
+
+interface YamlData {
+  incidents: YamlIncident[];
+  metadata: any;
+}
+
+// Load and parse the incidents YAML file at build time
+function loadIncidentsYaml(): YamlData {
+  const yamlPath = path.join(process.cwd(), 'public', 'incidents.yaml');
+  const yamlContent = fs.readFileSync(yamlPath, 'utf-8');
+  const data = yaml.load(yamlContent) as YamlData;
+  return data;
+}
+
+// Transform incident data to match TypeScript interface
+function transformIncident(yamlIncident: YamlIncident): Incident {
+  const cvssVector = yamlIncident.cvss.vector || '';
+  
+  // Parse CVSS vector for defaults if not provided
+  const parseCVSSVector = (vector: string) => {
+    const params: any = {};
+    if (vector.includes('AV:N')) params.attack_vector = 'network';
+    else if (vector.includes('AV:A')) params.attack_vector = 'adjacent';
+    else if (vector.includes('AV:L')) params.attack_vector = 'local';
+    else if (vector.includes('AV:P')) params.attack_vector = 'physical';
+    else params.attack_vector = 'network';
+    
+    if (vector.includes('AC:L')) params.attack_complexity = 'low';
+    else if (vector.includes('AC:H')) params.attack_complexity = 'high';
+    else params.attack_complexity = 'low';
+    
+    if (vector.includes('PR:N')) params.privileges_required = 'none';
+    else if (vector.includes('PR:L')) params.privileges_required = 'low';
+    else if (vector.includes('PR:H')) params.privileges_required = 'high';
+    else params.privileges_required = 'none';
+    
+    if (vector.includes('UI:N')) params.user_interaction = 'none';
+    else if (vector.includes('UI:R')) params.user_interaction = 'required';
+    else params.user_interaction = 'none';
+    
+    return params;
+  };
+
+  const cvssParams = parseCVSSVector(cvssVector);
+  
+  // Default attribution if missing
+  const defaultAttribution: Attribution = {
+    confidence: 'low',
+    threat_actor: 'Unknown',
+    motivation: 'Unclear',
+  };
+
+  return {
+    ...yamlIncident,
+    // Transform attack_mechanics.type to primary
+    attack_mechanics: {
+      primary: yamlIncident.attack_mechanics.type,
+      delivery: yamlIncident.attack_mechanics.delivery,
+      description: yamlIncident.description || yamlIncident.attack_mechanics.type,
+    },
+    // Complete CVSS data
+    cvss: {
+      ...yamlIncident.cvss,
+      ...cvssParams,
+      base_score: Number(yamlIncident.cvss.base_score || 0),
+    },
+    // Map confidence_level if needed
+    confidence_level: yamlIncident.confidence_level.toLowerCase() as 'low' | 'medium' | 'high',
+    // Ensure sources have proper reliability values
+    sources: yamlIncident.sources.map((source: any) => ({
+      ...source,
+      reliability: source.reliability?.toLowerCase() || 'medium',
+    })),
+    // Use attribution or default
+    attribution: yamlIncident.attribution || defaultAttribution,
+    // Ensure remediation has required fields with type normalization
+    remediation: {
+      mitigation: yamlIncident.remediation?.mitigation || 'No mitigation provided',
+      affected_versions: yamlIncident.remediation?.affected_versions,
+      // Normalize safe_versions to always be an array
+      safe_versions: Array.isArray(yamlIncident.remediation?.safe_versions)
+        ? yamlIncident.remediation.safe_versions
+        : (yamlIncident.remediation?.safe_versions ? [yamlIncident.remediation.safe_versions] : []),
+      ...yamlIncident.remediation,
+    },
+  };
+}
+
+// Load, transform and export incidents at build time
+const yamlData = loadIncidentsYaml();
+export const incidents = yamlData.incidents.map(transformIncident);
+export const metadata = yamlData.metadata;
+
+// Export a function to get incident by ID/slug
+export function getIncidentById(id: string): Incident | undefined {
+  return incidents.find(incident => incident.id === id);
+}
+
+// Export a function to get all incident IDs for SSG
+export function getAllIncidentIds(): string[] {
+  return incidents.map(incident => incident.id);
+}

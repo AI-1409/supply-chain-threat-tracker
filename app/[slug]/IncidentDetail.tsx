@@ -14,90 +14,7 @@ import {
   CardTitle,
 } from '@nipsys/lsd';
 import { useRouter } from 'next/navigation';
-import type { MaliciousPackage } from '../../data/types';
-
-interface CVSS {
-  base_score: number;
-  severity: string;
-  vector: string;
-}
-
-interface AttackMetrics {
-  type: string;
-  delivery: string;
-  discovered: string;
-}
-
-interface IOCPackage {
-  package: string;
-  version_range: string;
-  ecosystem: string;
-}
-
-interface IOCNetwork {
-  host: string;
-  port: number;
-}
-
-interface IOCFileHash {
-  algorithm: string;
-  value: string;
-}
-
-interface IOCs {
-  malicious_packages?: IOCPackage[];
-  malicious_dependencies?: MaliciousPackage[];
-  network?: IOCNetwork[];
-  file_hashes?: IOCFileHash[];
-  crypto_wallets?: string[];
-  behaviors?: string[];
-}
-
-interface Impact {
-  downloads?: number | string;
-  affected_packages?: number | string;
-  targets: string[];
-  exposure_duration?: string;
-}
-
-interface Source {
-  type: string;
-  url: string;
-  reliability: string;
-}
-
-interface Attribution {
-  actor?: string;
-  confidence?: string;
-  motivation?: string;
-  tactics: string[];
-}
-
-interface Remediation {
-  affected_versions: string;
-  safe_versions: string;
-  mitigation: string;
-}
-
-interface Incident {
-  id: string;
-  package: string;
-  ecosystem: string;
-  cve: string;
-  ghsa: string;
-  discovered: string;
-  reported: string;
-  status: string;
-  confidence_level: string;
-  cvss: CVSS;
-  attack_mechanics: AttackMetrics;
-  description: string;
-  iocs: IOCs;
-  impact_statistics: Impact;
-  sources: Source[];
-  attribution?: Attribution;
-  remediation: Remediation;
-}
+import type { Incident } from '../../data/types';
 
 export default function IncidentDetail({ incident }: { incident: Incident }) {
   const router = useRouter();
@@ -110,22 +27,29 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
       'info' | 'filled' | 'outlined' | 'destructive' | 'warning' | 'success'
     > = {
       CRITICAL: 'destructive',
-      HIGH: 'warning',
-      MEDIUM: 'info',
+      HIGH: 'destructive',
+      MEDIUM: 'warning',
       LOW: 'success',
     };
     return colors[severity] || 'info';
   }
 
-  function getConfidenceColor(confidence: string): 'filled' | 'outlined' | 'warning' {
-    const colors: Record<string, 'filled' | 'outlined' | 'warning'> = {
-      HIGH: 'filled',
+  function getConfidenceColor(
+    confidence: string
+  ): 'filled' | 'outlined' | 'warning' | 'success' | 'destructive' {
+    const colors: Record<string, 'filled' | 'outlined' | 'warning' | 'success' | 'destructive'> = {
+      HIGH: 'destructive',
       MEDIUM: 'warning',
-      LOW: 'outlined',
+      LOW: 'success',
       SUSPECTED: 'outlined',
     };
     return colors[confidence] || 'outlined';
   }
+
+  const baseScore =
+    typeof incident.cvss.base_score === 'string'
+      ? Number.parseFloat(incident.cvss.base_score)
+      : incident.cvss.base_score;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -149,7 +73,7 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               <Badge variant={getSeverityColor(incident.cvss.severity)}>
-                {incident.cvss.severity} ({incident.cvss.base_score})
+                {incident.cvss.severity} ({baseScore})
               </Badge>
               <Badge variant={getConfidenceColor(incident.confidence_level)}>
                 {incident.confidence_level}
@@ -161,26 +85,28 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
         </Card>
 
         {/* Description Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Description</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{incident.description}</p>
-          </CardContent>
-        </Card>
+        {incident.description && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Description</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{incident.description}</p>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Attack Metrics Card */}
+        {/* Attack Mechanics Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Attack Metrics</CardTitle>
+            <CardTitle>Attack Mechanics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Attack Type</div>
                 <div className="text-sm font-semibold capitalize">
-                  {incident.attack_mechanics.type.replace(/_/g, ' ')}
+                  {incident.attack_mechanics.primary.replace(/_/g, ' ')}
                 </div>
               </div>
               <div>
@@ -191,132 +117,56 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Discovered</div>
-                <div className="text-sm font-semibold">{incident.attack_mechanics.discovered}</div>
+                <div className="text-sm font-semibold">{incident.discovered}</div>
               </div>
             </div>
+            {incident.attack_mechanics.description && (
+              <div className="mt-4">
+                <div className="text-sm font-medium text-muted-foreground mb-2">Details</div>
+                <p className="text-sm text-gray-700">{incident.attack_mechanics.description}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* CVSS Vector Card */}
+        {/* CVSS Details Card */}
         <Card>
           <CardHeader>
-            <CardTitle>CVSS Vector</CardTitle>
+            <CardTitle>CVSS Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <code className="text-xs bg-muted px-3 py-2 rounded block break-all">
-              {incident.cvss.vector}
-            </code>
-          </CardContent>
-        </Card>
-
-        {/* IOCs Accordion */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Indicators of Compromise (IOCs)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="multiple" className="w-full">
-              {/* Malicious Packages */}
-              {incident.iocs.malicious_packages && incident.iocs.malicious_packages.length > 0 && (
-                <AccordionItem value="malicious-packages">
-                  <AccordionTrigger>
-                    Malicious Packages ({incident.iocs.malicious_packages.length})
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3">
-                      {incident.iocs.malicious_packages.map((pkg, idx) => (
-                        <div key={idx} className="bg-muted/50 p-3 rounded text-sm">
-                          <div className="font-semibold">{pkg.package}</div>
-                          <div className="text-muted-foreground text-xs mt-1">
-                            <div>Ecosystem: {pkg.ecosystem}</div>
-                            <div>Version Range: {pkg.version_range}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-
-              {/* Network IOCs */}
-              {incident.iocs.network && incident.iocs.network.length > 0 && (
-                <AccordionItem value="network">
-                  <AccordionTrigger>
-                    Network Indicators ({incident.iocs.network.length})
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-2">
-                      {incident.iocs.network.map((net, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-muted/50 p-3 rounded flex justify-between items-center"
-                        >
-                          <code className="text-sm">{net.host}</code>
-                          <Badge variant="info">Port {net.port}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-
-              {/* File Hashes */}
-              {incident.iocs.file_hashes && incident.iocs.file_hashes.length > 0 && (
-                <AccordionItem value="file-hashes">
-                  <AccordionTrigger>
-                    File Hashes ({incident.iocs.file_hashes.length})
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-2">
-                      {incident.iocs.file_hashes.map((hash, idx) => (
-                        <div key={idx} className="bg-muted/50 p-3 rounded">
-                          <div className="text-xs font-medium text-muted-foreground mb-1">
-                            {hash.algorithm}
-                          </div>
-                          <code className="text-xs break-all">{hash.value}</code>
-                        </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-
-              {/* Crypto Wallets */}
-              {incident.iocs.crypto_wallets && incident.iocs.crypto_wallets.length > 0 && (
-                <AccordionItem value="crypto-wallets">
-                  <AccordionTrigger>
-                    Cryptocurrency Wallets ({incident.iocs.crypto_wallets.length})
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-2">
-                      {incident.iocs.crypto_wallets.map((wallet, idx) => (
-                        <code key={idx} className="block bg-muted/50 p-3 rounded text-xs break-all">
-                          {wallet}
-                        </code>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-
-              {/* Behaviors */}
-              {incident.iocs.behaviors && incident.iocs.behaviors.length > 0 && (
-                <AccordionItem value="behaviors">
-                  <AccordionTrigger>
-                    Malicious Behaviors ({incident.iocs.behaviors.length})
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="flex flex-wrap gap-2">
-                      {incident.iocs.behaviors.map((behavior, idx) => (
-                        <Badge key={idx} variant="destructive" className="capitalize">
-                          {behavior.replace(/_/g, ' ')}
-                        </Badge>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-            </Accordion>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Base Score</span>
+                <span className="font-semibold">{baseScore}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Severity</span>
+                <span className="font-semibold">{incident.cvss.severity}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Attack Vector</span>
+                <span className="font-semibold">
+                  {incident.cvss.attack_vector.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Attack Complexity</span>
+                <span className="font-semibold">
+                  {incident.cvss.attack_complexity.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">User Interaction</span>
+                <span className="font-semibold">
+                  {incident.cvss.user_interaction.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div className="col-span-1 md:col-span-2">
+                <div className="font-medium text-muted-foreground mb-1">Vector String</div>
+                <div className="text-xs font-mono bg-muted p-2 rounded">{incident.cvss.vector}</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -326,41 +176,69 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
             <CardTitle>Impact Statistics</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Downloads</div>
-                <div className="text-sm font-semibold">
-                  {typeof incident.impact_statistics.downloads === 'number'
-                    ? incident.impact_statistics.downloads.toLocaleString()
-                    : incident.impact_statistics.downloads}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Affected Packages</div>
-                <div className="text-sm font-semibold">
-                  {typeof incident.impact_statistics.affected_packages === 'number'
-                    ? incident.impact_statistics.affected_packages.toLocaleString()
-                    : incident.impact_statistics.affected_packages}
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <div className="text-sm font-medium text-muted-foreground">Targets</div>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {incident.impact_statistics.targets.map((target, idx) => (
-                    <Badge key={idx} variant="info">
-                      {target}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              {incident.impact_statistics.exposure_duration && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground">Exposure Duration</div>
-                  <div className="text-sm font-semibold">
-                    {incident.impact_statistics.exposure_duration}
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {incident.impact_statistics.downloads && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-muted-foreground">Downloads Affected</span>
+                  <span className="font-semibold">
+                    {incident.impact_statistics.downloads.toLocaleString()}
+                  </span>
                 </div>
               )}
+              {(incident.impact_statistics.affected_direct_packages ||
+                incident.impact_statistics.affected_packages) && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-muted-foreground">Affected Packages</span>
+                  <span className="font-semibold">
+                    {(
+                      incident.impact_statistics.affected_direct_packages ||
+                      incident.impact_statistics.affected_packages
+                    )?.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {incident.impact_statistics.exposure_duration && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-muted-foreground">Exposure Duration</span>
+                  <span className="font-semibold">
+                    {incident.impact_statistics.exposure_duration}
+                  </span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sources Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {incident.sources.map((source, index) => (
+                <a
+                  key={index}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-sm text-blue-600 hover:underline"
+                >
+                  <Badge
+                    variant={
+                      source.reliability === 'high'
+                        ? 'filled'
+                        : source.reliability === 'medium'
+                          ? 'warning'
+                          : 'outlined'
+                    }
+                    size="sm"
+                  >
+                    {source.reliability}
+                  </Badge>{' '}
+                  {source.type}: {source.url}
+                </a>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -372,39 +250,23 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               <CardTitle>Attribution</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {incident.attribution.actor && (
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">Threat Actor</div>
-                    <div className="text-sm font-semibold">{incident.attribution.actor}</div>
-                  </div>
-                )}
-                {incident.attribution.confidence && (
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">Confidence</div>
-                    <div className="text-sm font-semibold capitalize">
-                      {incident.attribution.confidence}
-                    </div>
-                  </div>
-                )}
-                {incident.attribution.motivation && (
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">Motivation</div>
-                    <div className="text-sm font-semibold capitalize">
-                      {incident.attribution.motivation.replace(/_/g, ' ')}
-                    </div>
-                  </div>
-                )}
-                {incident.attribution.tactics && incident.attribution.tactics.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground">Tactics</div>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {incident.attribution.tactics.map((tactic, idx) => (
-                        <Badge key={idx} variant="outlined">
-                          {tactic}
-                        </Badge>
-                      ))}
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="font-medium text-muted-foreground">Threat Actor</div>
+                  <div className="font-semibold">{incident.attribution.threat_actor}</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Confidence</div>
+                  <div className="font-semibold">{incident.attribution.confidence}</div>
+                </div>
+                <div>
+                  <div className="font-medium text-muted-foreground">Motivation</div>
+                  <div className="font-semibold">{incident.attribution.motivation}</div>
+                </div>
+                {incident.attribution.notes && (
+                  <div className="col-span-1 md:col-span-2">
+                    <div className="font-medium text-muted-foreground">Notes</div>
+                    <div className="text-sm mt-1">{incident.attribution.notes}</div>
                   </div>
                 )}
               </div>
@@ -419,50 +281,117 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {incident.remediation.affected_versions && (
+                <div>
+                  <div className="font-medium text-muted-foreground">Affected Versions</div>
+                  <div className="text-sm font-semibold">
+                    {incident.remediation.affected_versions}
+                  </div>
+                </div>
+              )}
+              {incident.remediation.fixed_version && (
+                <div>
+                  <div className="font-medium text-muted-foreground">Fixed Version</div>
+                  <div className="text-sm font-semibold">{incident.remediation.fixed_version}</div>
+                </div>
+              )}
+              {incident.remediation.safe_versions &&
+                incident.remediation.safe_versions.length > 0 && (
+                  <div>
+                    <div className="font-medium text-muted-foreground">Safe Versions</div>
+                    <div className="text-sm font-semibold">
+                      {incident.remediation.safe_versions.join(', ')}
+                    </div>
+                  </div>
+                )}
               <div>
-                <div className="text-sm font-medium text-muted-foreground">Affected Versions</div>
-                <div className="text-sm">{incident.remediation.affected_versions}</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Safe Versions</div>
-                <div className="text-sm">{incident.remediation.safe_versions}</div>
-              </div>
-              <div className="bg-muted/50 p-3 rounded">
-                <div className="text-sm font-medium text-muted-foreground mb-1">Mitigation</div>
-                <div className="text-sm">{incident.remediation.mitigation}</div>
+                <div className="font-medium text-muted-foreground">Mitigation</div>
+                <div className="text-sm font-semibold">{incident.remediation.mitigation}</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Sources Card */}
+        {/* IOCs Accordion */}
         <Card>
           <CardHeader>
-            <CardTitle>Sources</CardTitle>
+            <CardTitle>Indicators of Compromise (IOCs)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {incident.sources.map((source, idx) => (
-                <div key={idx} className="flex items-start justify-between p-3 bg-muted/50 rounded">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outlined">{source.type.replace(/_/g, ' ')}</Badge>
-                      <Badge variant={source.reliability === 'confirmed' ? 'filled' : 'info'}>
-                        {source.reliability}
-                      </Badge>
+            <Accordion type="single" collapsible className="w-full">
+              {/* Malicious Packages */}
+              {incident.iocs.malicious_packages && incident.iocs.malicious_packages.length > 0 && (
+                <AccordionItem value="malicious_packages">
+                  <AccordionTrigger>
+                    Malicious Packages ({incident.iocs.malicious_packages.length})
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2">
+                      {incident.iocs.malicious_packages.map((pkg, index) => (
+                        <div key={index} className="text-sm">
+                          <div className="font-semibold">{pkg.name}</div>
+                          {pkg.version && (
+                            <div className="text-muted-foreground">Version: {pkg.version}</div>
+                          )}
+                          {pkg.versions && (
+                            <div className="text-muted-foreground">
+                              Versions: {pkg.versions.join(', ')}
+                            </div>
+                          )}
+                          {pkg.registry && (
+                            <div className="text-muted-foreground">Registry: {pkg.registry}</div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline truncate block"
-                    >
-                      {source.url}
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Network IOCs */}
+              {incident.iocs.network && incident.iocs.network.length > 0 && (
+                <AccordionItem value="network">
+                  <AccordionTrigger>Network IOCs ({incident.iocs.network.length})</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2">
+                      {incident.iocs.network.map((ioc, index) => (
+                        <div key={index} className="text-sm">
+                          <div className="font-semibold">{ioc.type}</div>
+                          {ioc.value && <div className="text-muted-foreground">{ioc.value}</div>}
+                          {ioc.description && (
+                            <div className="text-muted-foreground">{ioc.description}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Behaviors */}
+              {incident.iocs.behavioral && incident.iocs.behavioral.length > 0 && (
+                <AccordionItem value="behaviors">
+                  <AccordionTrigger>
+                    Behavioral IOCs ({incident.iocs.behavioral.length})
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2">
+                      {incident.iocs.behavioral.map((ioc, index) => (
+                        <div key={index} className="text-sm">
+                          <div className="font-semibold">{ioc.type}</div>
+                          {ioc.description && (
+                            <div className="text-muted-foreground">{ioc.description}</div>
+                          )}
+                          {ioc.target && (
+                            <div className="text-muted-foreground">Target: {ioc.target}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
           </CardContent>
         </Card>
       </div>
