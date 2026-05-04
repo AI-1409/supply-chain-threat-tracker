@@ -13,7 +13,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@nipsys/lsd';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState } from 'react';
 import type { Incident } from '../../data/types';
 
@@ -52,17 +52,12 @@ function getCVSSSeverity(score: number): string {
 }
 
 export default function IncidentDashboard({ incidents }: IncidentDashboardProps) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>('All');
 
   const filteredIncidents =
     activeTab === 'All'
       ? incidents
       : incidents.filter(incident => incident.ecosystem === activeTab);
-
-  const handleCardClick = (incident: Incident) => {
-    router.push(`/${incident.package}`);
-  };
 
   return (
     <>
@@ -131,93 +126,51 @@ export default function IncidentDashboard({ incidents }: IncidentDashboardProps)
         </div>
       )}
 
-      {/* Incident Cards Grid */}
+      {/* Incident Cards */}
       {filteredIncidents.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--lsd-spacing-large)]">
-          {filteredIncidents.map(incident => (
-            <Card
-              key={incident.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handleCardClick(incident)}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between gap-[var(--lsd-spacing-smaller)]">
-                  <CardTitle className="text-xl">{incident.package}</CardTitle>
-                  <Badge variant="destructive" size="sm">
-                    CVSS {incident.cvss.base_score}
-                  </Badge>
-                </div>
-                <CardDescription className="flex items-center gap-[var(--lsd-spacing-smallest)] mt-[var(--lsd-spacing-smaller)]">
-                  <span>{incident.id}</span>
-                </CardDescription>
-              </CardHeader>
+        <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--lsd-spacing-base)]">
+            {filteredIncidents.map(incident => {
+              const baseScore =
+                typeof incident.cvss.base_score === 'string'
+                  ? Number.parseFloat(incident.cvss.base_score)
+                  : incident.cvss.base_score;
 
-              <CardContent>
-                {/* Badges */}
-                <div className="flex flex-wrap gap-[var(--lsd-spacing-smallest)] mb-[var(--lsd-spacing-base)]">
-                  <Badge variant={getConfidenceColor(incident.confidence_level)} size="sm">
-                    {incident.confidence_level.toUpperCase()}
-                  </Badge>
-                  <Badge variant="info" size="sm">
-                    {incident.ecosystem}
-                  </Badge>
-                  <Badge variant={getCVSSColor(incident.cvss.base_score as number)} size="sm">
-                    {getCVSSSeverity(incident.cvss.base_score as number)}
-                  </Badge>
-                </div>
-
-                {/* Brief Description */}
-                <p className="text-sm text-[var(--lsd-text-secondary)] leading-relaxed">
-                  {incident.attack_mechanics.description.split('.').slice(0, 2).join('.').trim()}.
-                </p>
-
-                {/* Attack Details */}
-                <div className="mt-[var(--lsd-spacing-base)] space-y-[var(--lsd-spacing-smallest)]">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-[var(--lsd-text-secondary)]">Attack Type</span>
-                    <span className="text-[var(--lsd-text-primary)] font-medium">
-                      {incident.attack_mechanics.primary.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-[var(--lsd-text-secondary)]">Delivery</span>
-                    <span className="text-[var(--lsd-text-primary)] font-medium">
-                      {incident.attack_mechanics.delivery.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-[var(--lsd-text-secondary)]">Discovered</span>
-                    <span className="text-[var(--lsd-text-primary)] font-medium">
-                      {incident.discovered}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex flex-col gap-[var(--lsd-spacing-smallest)] text-xs text-[var(--lsd-text-secondary)]">
-                <div className="flex justify-between w-full">
-                  <span>CVE: {incident.cve.replace(/N\/A/g, 'None')}</span>
-                  <span>GHSA: {incident.ghsa.replace(/N\/A/g, 'None')}</span>
-                </div>
-                <div className="flex justify-between w-full">
-                  <span>Status: {incident.status}</span>
-                  <span>Severity: {incident.cvss.severity}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full mt-[var(--lsd-spacing-smallest)]"
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleCardClick(incident);
-                  }}
-                >
-                  View Details →
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+              return (
+                <Link key={incident.id} href={incident.id} className="block">
+                  <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-2 border-transparent hover:border-[var(--lsd-border)]">
+                    <CardHeader>
+                      <CardTitle className="text-xl">{incident.package}</CardTitle>
+                      <CardDescription>
+                        {incident.id} · {incident.ecosystem}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Badge variant={getCVSSColor(baseScore)} size="sm">
+                          {getCVSSSeverity(baseScore)} ({baseScore})
+                        </Badge>
+                        <Badge variant={getConfidenceColor(incident.confidence_level)} size="sm">
+                          {incident.confidence_level}
+                        </Badge>
+                      </div>
+                      {incident.attack_mechanics.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {incident.attack_mechanics.description}
+                        </p>
+                      )}
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outlined" size="sm" className="w-full">
+                        View Details →
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
     </>
   );

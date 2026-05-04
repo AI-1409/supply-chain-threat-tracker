@@ -13,12 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@nipsys/lsd';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { Incident } from '../../data/types';
 
 export default function IncidentDetail({ incident }: { incident: Incident }) {
-  const router = useRouter();
-
   function getSeverityColor(
     severity: string
   ): 'info' | 'filled' | 'outlined' | 'destructive' | 'warning' | 'success' {
@@ -53,9 +51,11 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <Button variant="ghost" onClick={() => router.push('/')} className="mb-6">
-        ← Back to Dashboard
-      </Button>
+      <Link href="/">
+        <Button variant="ghost" className="mb-6">
+          ← Back to Dashboard
+        </Button>
+      </Link>
 
       <div className="space-y-6">
         {/* Header Card */}
@@ -157,14 +157,16 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                 </span>
               </div>
               <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Privileges Required</span>
+                <span className="font-semibold">
+                  {incident.cvss.privileges_required.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="font-medium text-muted-foreground">User Interaction</span>
                 <span className="font-semibold">
                   {incident.cvss.user_interaction.replace(/_/g, ' ')}
                 </span>
-              </div>
-              <div className="col-span-1 md:col-span-2">
-                <div className="font-medium text-muted-foreground mb-1">Vector String</div>
-                <div className="text-xs font-mono bg-muted p-2 rounded">{incident.cvss.vector}</div>
               </div>
             </div>
           </CardContent>
@@ -203,6 +205,18 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                   <span className="font-semibold">
                     {incident.impact_statistics.exposure_duration}
                   </span>
+                </div>
+              )}
+              {incident.impact_statistics.targets && (
+                <div className="col-span-1 md:col-span-2">
+                  <div className="font-medium text-muted-foreground mb-1">Targets</div>
+                  <div className="flex flex-wrap gap-1">
+                    {incident.impact_statistics.targets.map((target: string, idx: number) => (
+                      <Badge key={idx} variant="outlined" size="sm">
+                        {target}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -280,7 +294,7 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
             <CardTitle>Remediation</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {incident.remediation.affected_versions && (
                 <div>
                   <div className="font-medium text-muted-foreground">Affected Versions</div>
@@ -318,8 +332,7 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
             <CardTitle>Indicators of Compromise (IOCs)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {/* Malicious Packages */}
+            <Accordion type="multiple">
               {incident.iocs.malicious_packages && incident.iocs.malicious_packages.length > 0 && (
                 <AccordionItem value="malicious_packages">
                   <AccordionTrigger>
@@ -327,8 +340,8 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
-                      {incident.iocs.malicious_packages.map((pkg, index) => (
-                        <div key={index} className="text-sm">
+                      {incident.iocs.malicious_packages.map((pkg: any, idx: number) => (
+                        <div key={idx} className="text-sm">
                           <div className="font-semibold">{pkg.name}</div>
                           {pkg.version && (
                             <div className="text-muted-foreground">Version: {pkg.version}</div>
@@ -348,14 +361,13 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                 </AccordionItem>
               )}
 
-              {/* Network IOCs */}
               {incident.iocs.network && incident.iocs.network.length > 0 && (
                 <AccordionItem value="network">
                   <AccordionTrigger>Network IOCs ({incident.iocs.network.length})</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
-                      {incident.iocs.network.map((ioc, index) => (
-                        <div key={index} className="text-sm">
+                      {incident.iocs.network.map((ioc: any, idx: number) => (
+                        <div key={idx} className="text-sm">
                           <div className="font-semibold">{ioc.type}</div>
                           {ioc.value && <div className="text-muted-foreground">{ioc.value}</div>}
                           {ioc.description && (
@@ -368,7 +380,6 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                 </AccordionItem>
               )}
 
-              {/* Behaviors */}
               {incident.iocs.behavioral && incident.iocs.behavioral.length > 0 && (
                 <AccordionItem value="behaviors">
                   <AccordionTrigger>
@@ -376,15 +387,30 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
-                      {incident.iocs.behavioral.map((ioc, index) => (
-                        <div key={index} className="text-sm">
-                          <div className="font-semibold">{ioc.type}</div>
-                          {ioc.description && (
-                            <div className="text-muted-foreground">{ioc.description}</div>
+                      {incident.iocs.behavioral.map((behavior: any, idx: number) => (
+                        <div key={idx} className="text-sm">
+                          <div className="font-semibold">{behavior.type}</div>
+                          {behavior.description && (
+                            <div className="text-muted-foreground">{behavior.description}</div>
                           )}
-                          {ioc.target && (
-                            <div className="text-muted-foreground">Target: {ioc.target}</div>
-                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {incident.iocs.file_hashes && incident.iocs.file_hashes.length > 0 && (
+                <AccordionItem value="file_hashes">
+                  <AccordionTrigger>
+                    File Hashes ({incident.iocs.file_hashes.length})
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2">
+                      {incident.iocs.file_hashes.map((hash: any, idx: number) => (
+                        <div key={idx} className="text-sm">
+                          <div className="font-semibold">{hash.type}</div>
+                          <div className="text-muted-foreground break-all">{hash.value}</div>
                         </div>
                       ))}
                     </div>
