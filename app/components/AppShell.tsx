@@ -1,6 +1,11 @@
 'use client';
 
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -8,35 +13,54 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from '@nipsys/lsd';
 import { PackageIcon } from '@phosphor-icons/react';
-
-const ECOSYSTEMS = ['All', 'npm', 'PyPI', 'RubyGems', 'crates.io'] as const;
+import { useState } from 'react';
+import {
+  ATTACK_TYPE_OPTIONS,
+  DATE_RANGE_OPTIONS,
+  DEFAULT_FILTERS,
+  DOCUMENTATION_QUALITY_OPTIONS,
+  ECOSYSTEM_OPTIONS,
+  type FilterState,
+  SEVERITY_OPTIONS,
+} from '../../data/filters';
+import type { Incident } from '../../data/types';
 
 interface AppShellProps {
   children: React.ReactNode;
-  selectedEcosystem: string;
-  onEcosystemChange: (ecosystem: string) => void;
-  incidents: { ecosystem: string }[];
+  incidents: Incident[];
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
 }
 
-export default function AppShell({
-  children,
-  selectedEcosystem,
-  onEcosystemChange,
-  incidents,
-}: AppShellProps) {
-  const ecosystemCounts = ECOSYSTEMS.map(ecosystem => {
-    if (ecosystem === 'All') {
-      return ecosystem;
-    }
-    const count = incidents.filter(i => i.ecosystem === ecosystem).length;
-    return count > 0 ? ecosystem : null;
-  }).filter(e => e !== null);
+export default function AppShell({ children, incidents, filters, onFiltersChange }: AppShellProps) {
+  const ecosystemCounts = ECOSYSTEM_OPTIONS.filter(opt => opt.value !== 'all')
+    .map(opt => ({
+      value: opt.value,
+      label: opt.label,
+      count: incidents.filter(i => {
+        if (opt.value === 'other') {
+          return ![
+            'npm',
+            'pypi',
+            'rubygems',
+            'crates.io',
+            'go_modules',
+            'maven',
+            'nuget',
+            'packagist',
+            'cocoapods',
+            'pub.dev',
+          ].includes(i.ecosystem.toLowerCase());
+        }
+        return i.ecosystem.toLowerCase() === opt.value;
+      }).length,
+    }))
+    .filter(e => e.count > 0);
 
   return (
     <SidebarProvider>
@@ -51,29 +75,126 @@ export default function AppShell({
         </SidebarHeader>
 
         <SidebarContent>
+          {/* Ecosystem */}
           <SidebarGroup>
-            <SidebarGroupLabel>Ecosystems</SidebarGroupLabel>
+            <SidebarGroupLabel>Ecosystem</SidebarGroupLabel>
             <SidebarMenu>
-              {ECOSYSTEMS.map(ecosystem => {
-                if (!ecosystemCounts.includes(ecosystem) && ecosystem !== 'All') {
-                  return null;
-                }
-                const count =
-                  ecosystem === 'All'
-                    ? incidents.length
-                    : incidents.filter(i => i.ecosystem === ecosystem).length;
-                return (
-                  <SidebarMenuItem key={ecosystem}>
-                    <SidebarMenuButton
-                      isActive={selectedEcosystem === ecosystem}
-                      onClick={() => onEcosystemChange(ecosystem)}
-                    >
-                      <span>{ecosystem}</span>
-                      <span className="text-sm text-[var(--lsd-text-secondary)]">{count}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              <SidebarMenuItem>
+                <Select
+                  value={filters.ecosystem}
+                  onValueChange={value => onFiltersChange({ ...filters, ecosystem: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select ecosystem" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ECOSYSTEM_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                        {opt.value === 'all' && ` (${incidents.length})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          {/* Severity */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Severity</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Select
+                  value={filters.severity}
+                  onValueChange={value => onFiltersChange({ ...filters, severity: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select severity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SEVERITY_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          {/* Documentation Quality */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Documentation Quality</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Select
+                  value={filters.documentationQuality}
+                  onValueChange={value =>
+                    onFiltersChange({ ...filters, documentationQuality: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select quality" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DOCUMENTATION_QUALITY_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          {/* Attack Type */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Attack Type</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Select
+                  value={filters.attackType}
+                  onValueChange={value => onFiltersChange({ ...filters, attackType: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ATTACK_TYPE_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+
+          {/* Date Range */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Date Range</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Select
+                  value={filters.dateRange}
+                  onValueChange={value => onFiltersChange({ ...filters, dateRange: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATE_RANGE_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>

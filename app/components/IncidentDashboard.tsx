@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Badge,
   Button,
@@ -11,29 +12,13 @@ import {
   CardTitle,
 } from '@nipsys/lsd';
 import { ArrowRight } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { filterIncidents } from '../../data/filter-utils';
 import type { Incident } from '../../data/types';
-import AppShell from './AppShell';
+import { useFilters } from './IncidentsAppHydrated';
 import IncidentDialog from './IncidentDialog';
-
-const ECOSYSTEM_TABS = ['All', 'npm', 'PyPI', 'RubyGems', 'crates.io'] as const;
 
 interface IncidentDashboardProps {
   incidents: Incident[];
-}
-
-function getConfidenceColor(confidence: string): 'destructive' | 'warning' | 'success' {
-  switch (confidence.toLowerCase()) {
-    case 'high':
-      return 'destructive';
-    case 'medium':
-      return 'warning';
-    case 'suspected':
-    case 'low':
-      return 'success';
-    default:
-      return 'destructive';
-  }
 }
 
 function getCVSSColor(score: number): 'destructive' | 'warning' | 'success' {
@@ -50,15 +35,41 @@ function getCVSSSeverity(score: number): string {
   return 'None';
 }
 
+function getDocumentationQualityVariant(quality: string): 'destructive' | 'warning' | 'success' {
+  switch (quality.toLowerCase()) {
+    case 'confirmed':
+    case 'high':
+      return 'destructive';
+    case 'limited':
+    case 'medium':
+      return 'warning';
+    case 'unverified':
+    case 'low':
+      return 'success';
+    default:
+      return 'destructive';
+  }
+}
+
+function getDocumentationQualityLabel(confidence: string): string {
+  switch (confidence.toLowerCase()) {
+    case 'high':
+      return 'Confirmed';
+    case 'medium':
+      return 'Limited';
+    case 'low':
+      return 'Unverified';
+    default:
+      return confidence;
+  }
+}
+
 export default function IncidentDashboard({ incidents }: IncidentDashboardProps) {
-  const [selectedEcosystem, setSelectedEcosystem] = useState<string>('All');
+  const { filters } = useFilters();
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const filteredIncidents =
-    selectedEcosystem === 'All'
-      ? incidents
-      : incidents.filter(incident => incident.ecosystem === selectedEcosystem);
+  const filteredIncidents = filterIncidents(incidents, filters);
 
   function handleIncidentClick(incident: Incident) {
     setSelectedIncident(incident);
@@ -66,22 +77,18 @@ export default function IncidentDashboard({ incidents }: IncidentDashboardProps)
   }
 
   return (
-    <AppShell
-      selectedEcosystem={selectedEcosystem}
-      onEcosystemChange={setSelectedEcosystem}
-      incidents={incidents}
-    >
+    <>
       <IncidentDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         incident={selectedIncident}
       />
 
-      {/* Stats Summary */}
-      <section className="mb-[var(--lsd-spacing-large)]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-[var(--lsd-spacing-base)]">
+      {/* Stats Summary - always based on all incidents */}
+      <section className="mb-(--lsd-spacing-large)">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-(--lsd-spacing-base)">
           <Card className="border-[var(--lsd-border)]">
-            <CardContent className="pt-[var(--lsd-spacing-large)]">
+            <CardContent className="pt-(--lsd-spacing-large)">
               <div className="flex items-baseline justify-center text-3xl font-bold text-[var(--lsd-text-primary)]">
                 {incidents.length}
               </div>
@@ -91,108 +98,174 @@ export default function IncidentDashboard({ incidents }: IncidentDashboardProps)
             </CardContent>
           </Card>
           <Card className="border-[var(--lsd-border)]">
-            <CardContent className="pt-[var(--lsd-spacing-large)]">
+            <CardContent className="pt-(--lsd-spacing-large)">
               <div className="flex items-baseline justify-center text-3xl font-bold text-[var(--lsd-destructive)]">
-                {incidents.filter(i => (i.cvss.base_score as number) >= 7).length}
+                {incidents.filter(i => (i.cvss.base_score as number) >= 9).length}
               </div>
               <div className="text-sm text-center text-[var(--lsd-text-secondary)] mt-1">
-                Critical (CVSS ≥7)
+                Critical (CVSS ≥9)
               </div>
             </CardContent>
           </Card>
           <Card className="border-[var(--lsd-border)]">
-            <CardContent className="pt-[var(--lsd-spacing-large)]">
+            <CardContent className="pt-(--lsd-spacing-large)">
               <div className="flex items-baseline justify-center text-3xl font-bold text-[var(--lsd-success)]">
                 {incidents.filter(i => i.confidence_level === 'high').length}
               </div>
               <div className="text-sm text-center text-[var(--lsd-text-secondary)] mt-1">
-                High Confidence
+                Confirmed
               </div>
             </CardContent>
           </Card>
           <Card className="border-[var(--lsd-border)]">
-            <CardContent className="pt-[var(--lsd-spacing-large)]">
+            <CardContent className="pt-(--lsd-spacing-large)">
               <div className="flex items-baseline justify-center text-3xl font-bold text-[var(--lsd-text-primary)]">
-                {ECOSYSTEM_TABS.filter(e => e !== 'All').length}
+                {new Set(incidents.map(i => i.ecosystem)).size}
               </div>
               <div className="text-sm text-center text-[var(--lsd-text-secondary)] mt-1">
-                Ecosystems
+                Ecosystems Affected
               </div>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* Current Selection */}
-      <section className="mb-[var(--lsd-spacing-large)]">
-        <h2 className="text-xl font-semibold text-[var(--lsd-text-primary)] mb-2">
-          {selectedEcosystem === 'All' ? 'All Ecosystems' : selectedEcosystem}
-        </h2>
-        <p className="text-sm text-[var(--lsd-text-secondary)]">
-          Showing {filteredIncidents.length} incident{filteredIncidents.length !== 1 ? 's' : ''}
-        </p>
-      </section>
-
-      {/* No Results */}
-      {filteredIncidents.length === 0 && (
-        <div className="text-center py-[var(--lsd-spacing-largest)]">
-          <div className="text-[var(--lsd-text-secondary)]">
-            No incidents found for this ecosystem.
+      {/* Filters */}
+      {filters.ecosystem !== 'all' ||
+      filters.severity !== 'all' ||
+      filters.documentationQuality !== 'all' ||
+      filters.attackType !== 'all' ||
+      filters.dateRange !== 'all' ? (
+        <section className="mb-(--lsd-spacing-base)">
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-lg font-semibold text-[var(--lsd-text-primary)]">Active Filters</h2>
           </div>
-        </div>
-      )}
+          <div className="flex flex-wrap gap-2">
+            {filters.ecosystem !== 'all' && (
+              <Badge
+                variant="outlined"
+                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
+              >
+                Ecosystem: {filters.ecosystem}
+              </Badge>
+            )}
+            {filters.severity !== 'all' && (
+              <Badge
+                variant="outlined"
+                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
+              >
+                Severity: {filters.severity}
+              </Badge>
+            )}
+            {filters.documentationQuality !== 'all' && (
+              <Badge
+                variant="outlined"
+                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
+              >
+                Quality: {filters.documentationQuality}
+              </Badge>
+            )}
+            {filters.attackType !== 'all' && (
+              <Badge
+                variant="outlined"
+                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
+              >
+                Attack: {filters.attackType.replace(/_/g, ' ')}
+              </Badge>
+            )}
+            {filters.dateRange !== 'all' && (
+              <Badge
+                variant="outlined"
+                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
+              >
+                Date: {filters.dateRange}
+              </Badge>
+            )}
+          </div>
+        </section>
+      ) : null}
 
-      {/* Incident Cards */}
-      {filteredIncidents.length > 0 && (
-        <section>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--lsd-spacing-base)]">
+      {/* Incidents Grid */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-[var(--lsd-text-primary)]">
+            {filteredIncidents.length} {filteredIncidents.length === 1 ? 'Incident' : 'Incidents'}
+            {filteredIncidents.length !== incidents.length && (
+              <span className="text-[var(--lsd-text-secondary)]">
+                {' '}of {incidents.length} total
+              </span>
+            )}
+          </h2>
+        </div>
+
+        {filteredIncidents.length === 0 ? (
+          <Card className="border-[var(--lsd-border)]">
+            <CardContent className="pt-(--lsd-spacing-large)">
+              <div className="text-center text-[var(--lsd-text-secondary)]">
+                No incidents match the current filters.
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-(--lsd-spacing-medium) md:grid-cols-2 lg:grid-cols-3">
             {filteredIncidents.map(incident => {
               const baseScore =
                 typeof incident.cvss.base_score === 'string'
                   ? Number.parseFloat(incident.cvss.base_score)
                   : incident.cvss.base_score;
+              const severity = getCVSSSeverity(baseScore);
+              const quality = getDocumentationQualityLabel(incident.confidence_level);
 
               return (
                 <Card
                   key={incident.id}
+                  className="border-[var(--lsd-border)] cursor-pointer hover:border-[var(--lsd-primary)] transition-colors"
                   onClick={() => handleIncidentClick(incident)}
-                  className="h-full hover:shadow-lg hover:border-[var(--lsd-primary)] transition-all cursor-pointer border"
                 >
                   <CardHeader>
-                    <CardTitle className="text-xl truncate" title={incident.package}>
-                      {incident.package}
-                    </CardTitle>
-                    <CardDescription>
-                      {incident.id} · {incident.ecosystem}
-                    </CardDescription>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base truncate">{incident.package}</CardTitle>
+                        <CardDescription className="mt-1">{incident.ecosystem}</CardDescription>
+                      </div>
+                      <Badge variant={getCVSSColor(baseScore)}>{severity}</Badge>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <Badge variant={getCVSSColor(baseScore)} size="sm">
-                        {getCVSSSeverity(baseScore)} ({baseScore})
-                      </Badge>
-                      <Badge variant={getConfidenceColor(incident.confidence_level)} size="sm">
-                        {incident.confidence_level.charAt(0).toUpperCase() +
-                          incident.confidence_level.slice(1)}
-                      </Badge>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[var(--lsd-text-secondary)]">CVSS:</span>
+                        <span className="font-medium">{baseScore.toFixed(1)}</span>
+                        <Badge
+                          variant={getDocumentationQualityVariant(
+                            getDocumentationQualityLabel(incident.confidence_level)
+                          )}
+                          className="ml-auto"
+                        >
+                          {quality}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[var(--lsd-text-secondary)]">CVE:</span>
+                        <span className="font-medium">{incident.cve || 'N/A'}</span>
+                      </div>
+                      <div className="text-[var(--lsd-text-secondary)]">
+                        {incident.attack_mechanics.primary}
+                      </div>
                     </div>
-                    {incident.attack_mechanics.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {incident.attack_mechanics.description}
-                      </p>
-                    )}
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outlined" size="sm" className="w-full">
-                      View Details <ArrowRight size={16} className="ml-1" />
+                    <Button variant="ghost" className="w-full group">
+                      View Details
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </CardFooter>
                 </Card>
               );
             })}
           </div>
-        </section>
-      )}
-    </AppShell>
+        )}
+      </section>
+    </>
   );
 }

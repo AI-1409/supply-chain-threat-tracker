@@ -135,6 +135,11 @@ const yamlData = loadIncidentsYaml();
 export const incidents = yamlData.incidents.map(transformIncident);
 export const metadata = yamlData.metadata;
 
+// Export a function to get all incidents
+export function getAllIncidents(): Incident[] {
+  return incidents;
+}
+
 // Export a function to get incident by ID/slug
 export function getIncidentById(id: string): Incident | undefined {
   return incidents.find(incident => incident.id === id);
