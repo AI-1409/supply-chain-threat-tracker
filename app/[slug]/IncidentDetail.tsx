@@ -81,16 +81,19 @@ interface Remediation {
 
 interface Incident {
   id: string;
-  package_name: string;
+  package: string;
   ecosystem: string;
   cve: string;
   ghsa: string;
-  confidence: string;
+  discovered: string;
+  reported: string;
+  status: string;
+  confidence_level: string;
   cvss: CVSS;
-  attack_metrics: AttackMetrics;
+  attack_mechanics: AttackMetrics;
   description: string;
   iocs: IOCs;
-  impact: Impact;
+  impact_statistics: Impact;
   sources: Source[];
   attribution?: Attribution;
   remediation: Remediation;
@@ -136,7 +139,7 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-3xl mb-2">{incident.package_name}</CardTitle>
+                <CardTitle className="text-3xl mb-2">{incident.package}</CardTitle>
                 <CardDescription className="text-lg">
                   {incident.id} · {incident.ecosystem}
                 </CardDescription>
@@ -148,7 +151,9 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               <Badge variant={getSeverityColor(incident.cvss.severity)}>
                 {incident.cvss.severity} ({incident.cvss.base_score})
               </Badge>
-              <Badge variant={getConfidenceColor(incident.confidence)}>{incident.confidence}</Badge>
+              <Badge variant={getConfidenceColor(incident.confidence_level)}>
+                {incident.confidence_level}
+              </Badge>
               {incident.cve !== 'N/A' && <Badge variant="outlined">{incident.cve}</Badge>}
               {incident.ghsa !== 'N/A' && <Badge variant="outlined">{incident.ghsa}</Badge>}
             </div>
@@ -175,18 +180,18 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Attack Type</div>
                 <div className="text-sm font-semibold capitalize">
-                  {incident.attack_metrics.type.replace(/_/g, ' ')}
+                  {incident.attack_mechanics.type.replace(/_/g, ' ')}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Delivery Method</div>
                 <div className="text-sm font-semibold capitalize">
-                  {incident.attack_metrics.delivery.replace(/_/g, ' ')}
+                  {incident.attack_mechanics.delivery.replace(/_/g, ' ')}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Discovered</div>
-                <div className="text-sm font-semibold">{incident.attack_metrics.discovered}</div>
+                <div className="text-sm font-semibold">{incident.attack_mechanics.discovered}</div>
               </div>
             </div>
           </CardContent>
@@ -325,33 +330,35 @@ export default function IncidentDetail({ incident }: { incident: Incident }) {
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Downloads</div>
                 <div className="text-sm font-semibold">
-                  {typeof incident.impact.downloads === 'number'
-                    ? incident.impact.downloads.toLocaleString()
-                    : incident.impact.downloads}
+                  {typeof incident.impact_statistics.downloads === 'number'
+                    ? incident.impact_statistics.downloads.toLocaleString()
+                    : incident.impact_statistics.downloads}
                 </div>
               </div>
               <div>
                 <div className="text-sm font-medium text-muted-foreground">Affected Packages</div>
                 <div className="text-sm font-semibold">
-                  {typeof incident.impact.affected_packages === 'number'
-                    ? incident.impact.affected_packages.toLocaleString()
-                    : incident.impact.affected_packages}
+                  {typeof incident.impact_statistics.affected_packages === 'number'
+                    ? incident.impact_statistics.affected_packages.toLocaleString()
+                    : incident.impact_statistics.affected_packages}
                 </div>
               </div>
               <div className="md:col-span-2">
                 <div className="text-sm font-medium text-muted-foreground">Targets</div>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {incident.impact.targets.map((target, idx) => (
+                  {incident.impact_statistics.targets.map((target, idx) => (
                     <Badge key={idx} variant="info">
                       {target}
                     </Badge>
                   ))}
                 </div>
               </div>
-              {incident.impact.exposure_duration && (
+              {incident.impact_statistics.exposure_duration && (
                 <div>
                   <div className="text-sm font-medium text-muted-foreground">Exposure Duration</div>
-                  <div className="text-sm font-semibold">{incident.impact.exposure_duration}</div>
+                  <div className="text-sm font-semibold">
+                    {incident.impact_statistics.exposure_duration}
+                  </div>
                 </div>
               )}
             </div>
