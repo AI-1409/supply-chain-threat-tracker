@@ -1,0 +1,17 @@
+pre-commit:
+  commands:
+    lint-check:
+      run: npx biome check .
+      fail_text: "Biome linting failed. Run 'npm run lint:fix' to fix issues."
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx commitlint --edit {1}
+
+pre-push:
+  parallel: false
+  commands:
+    build:
+      run: npm run build
+      fail_text: "Build failed. Please fix build errors before pushing."

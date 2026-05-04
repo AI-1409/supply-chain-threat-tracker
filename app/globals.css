@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "@nipsys/lsd/css";
+
+/* Custom Spacing Extensions for Creative Layouts */
+:root {
+  --lsd-spacing-massive: 4rem; /* 64px */
+  --lsd-spacing-epic: 8rem; /* 128px */
+}
+
+/* Staggered Fade-in Animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+/* Respect Preference for Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+    opacity: 1;
+  }
+}

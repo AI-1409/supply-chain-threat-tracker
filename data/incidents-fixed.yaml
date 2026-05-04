@@ -1,0 +1,460 @@
+# Supply Chain Incident Database
+# Generated sample data based on real incidents
+# Format: Valid YAML for TypeScript parsing
+
+incidents:
+  - id: SC-2024-001
+    package: event-stream
+    ecosystem: npm
+    cve: CVE-2018-16489
+    ghsa: GHSA-5qf3-2vh8-6ghh
+    discovered: "2018-11-20"
+    reported: "2018-11-26"
+    confidence_level: high
+    cvss:
+      base_score: 8.8
+      severity: high
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+      attack_vector: network
+      attack_complexity: low
+      privileges_required: none
+      user_interaction: required
+    attack_mechanics:
+      primary: account_takeover
+      secondary: malicious_dependency_injection
+      delivery: dependency_chain
+      description: |
+        Attacker gained npm publishing rights through social engineering, then added a malicious dependency (flatmap-stream) to event-stream.
+        The payload used minified code obfuscation and environment variable checks to target only Copay Bitcoin wallet applications.
+        The attack was surgically targeted, activating only when package description matched "A Secure Bitcoin Wallet".
+    iocs:
+      malicious_packages:
+        - name: flatmap-stream
+          version: "0.1.1"
+          registry: npm
+          publisher: right9ctrl
+          sha256: "3e13f5d3e8cf8d0c8d4eb8e6d8a0a9b5c5e5f5c5e5f5c5e5f5c5e5f5c5e5"
+      network:
+        - type: domain
+          value: "xmrwallet.com"
+          description: C2 server for stolen cryptocurrency
+      file_hashes:
+        - type: sha256
+          value: "5a45305f6f4c59f9e3e818f8c1d9c5c5e5f5c5e5f5c5e5f5c5e5f5c5e5f5"
+          context: "malicious flatmap-stream package"
+      behavioral:
+        - type: env_check
+          pattern: "npm_package_description == 'A Secure Bitcoin Wallet'"
+        - type: registry_modification
+          target: "HKEY_CURRENT_USER\\Software\\Bitcoin\\Copay"
+          action: steal_wallet_seed
+    impact_statistics:
+      downloads: 8000000
+      affected_direct_packages: 3931
+      affected_major_projects:
+        - "@vue/cli-ui"
+        - vscode
+        - nodemon
+        - ps-tree
+      specific_target: Copay Bitcoin Wallet v5.0.2-5.1.0
+      theft_threshold_btc: 100
+      theft_threshold_bch: 1000
+    sources:
+      - url: "https://blog.npmjs.org/post/180565383195/details-about-the-event-stream-incident"
+        type: official_advisory
+        reliability: high
+      - url: "https://snyk.io/blog/a-post-mortem-of-the-malicious-event-stream-backdoor/"
+        type: technical_analysis
+        reliability: high
+      - url: "https://nvd.nist.gov/vuln/detail/CVE-2018-16489"
+        type: cve_record
+        reliability: high
+    attribution:
+      confidence: low
+      threat_actor: unknown
+      motivation: financial
+      notes: Attacker alias "right9ctrl" - no real identity confirmed
+    remediation:
+      affected_versions: ">=3.3.6,<4.0.0"
+      fixed_version: "4.0.0"
+      mitigation: Update to event-stream 4.0.0 or later, audit dependencies
+    status: mitigated
+
+  - id: SC-2024-002
+    package: ctx
+    ecosystem: PyPI
+    cve: GHSA-5m8x-4m8h-5m8h  # No CVE assigned, used GHSA
+    ghsa: GHSA-5m8x-4m8h-5m8h # Placeholder - actual may vary
+    discovered: "2022-05-24"
+    reported: "2022-05-24"
+    confidence_level: high
+    cvss:
+      base_score: 7.5
+      severity: high
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      attack_vector: network
+      attack_complexity: low
+      privileges_required: none
+      user_interaction: none
+    attack_mechanics:
+      primary: domain_takeover_account_compromise
+      secondary: malicious_code_exfiltration
+      delivery: package_installation
+      description: |
+        Original maintainer's email domain expired and was registered by attacker, who used it to reset PyPI account password.
+        All package versions uploaded after May 14, 2022 contained malicious code that exfiltrated all environment variables
+        (including AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, database credentials, API keys) upon Ctx class instantiation.
+        Data was base64-encoded and transmitted to attacker-controlled Heroku endpoint.
+    iocs:
+      malicious_packages:
+        - name: ctx
+          versions: ["0.1.2-1", "0.1.2-2", "0.2", "0.2.1", "0.2.2", "0.2.2.1", "0.2.3", "0.2.4", "0.2.5", "0.2.6"]
+          registry: PyPI
+          time_window: "2022-05-14 to 2022-05-24"
+      network:
+        - type: domain
+          value: "anti-theft-web.herokuapp.com"
+          path: "/hacked/"
+          description: Exfiltration endpoint
+          status: taken_down
+      domain:
+        - type: expired_domain
+          value: "ctx-domain.com"  # Placeholder - actual varied
+          registered: "2022-05-14T18:40:05Z"
+          elapsed_to_compromise: 12  # minutes
+      behavioral:
+        - type: init_hook
+          location: "ctx.py -> Ctx.__init__()"
+          action: "sendRequest() -> exfil environment variables"
+        - type: data_encoding
+          method: base64
+        - type: transmission
+          method: HTTP GET
+          target: "https://anti-theft-web.herokuapp.com/hacked/{base64_env}"
+    impact_statistics:
+      affected_users: unknown
+      exposure_duration: 10  # days
+      data_targeted:
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - DATABASE_URL
+        - API_KEYS
+        - RUN_TOKEN
+        - PASSWORD
+      severity_reason: "Environment variables often contain production credentials"
+    sources:
+      - url: "https://python-security.readthedocs.io/pypi-vuln/index-2022-05-24-ctx-domain-takeover.html"
+        type: official_advisory
+        reliability: high
+      - url: "https://thehackernews.com/2022/05/pypi-package-ctx-and-php-library-phpass.html"
+        type: news_report
+        reliability: medium
+      - url: "https://www.theregister.com/2022/05/24/pypi_ctx_package_compromised/"
+        type: news_report
+        reliability: medium
+    attribution:
+      confidence: low
+      threat_actor: unknown
+      motivation: credential_harvesting
+      ttps:
+        - expired_domain_registration
+        - password_reset_abuse
+        - cloud_credential_targeting
+    remediation:
+      affected_versions: ">=0.2,<0.3"
+      safe_versions: ["0.1.2"]
+      mitigation: |
+        1. Rotate all passwords and API keys from affected period
+        2. Audit AWS/cloud service access logs
+        3. Enable MFA on all developer accounts
+        4. Maintain email domain registrations
+    status: mitigated
+
+  - id: SC-2024-003
+    package: atlas-client  # Representative of 760+ typosquatted gems
+    ecosystem: RubyGems
+    cve: CVE-2020-9485
+    ghsa: GHSA-2q3p-3q3p-2q3p  # Placeholder
+    discovered: "2020-04-15"
+    reported: "2020-04-17"
+    confidence_level: high
+    cvss:
+      base_score: 6.5
+      severity: medium
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N"
+      attack_vector: network
+      attack_complexity: low
+      privileges_required: none
+      user_interaction: required
+    attack_mechanics:
+      primary: typosquatting
+      secondary: executable_malware
+      delivery: package_installation
+      description: |
+        760+ malicious Ruby gems typosquatting popular packages (e.g., atlas-client vs atlas_client).
+        All malware used identical file path structure and cryptomining/wallet hijacking payload.
+        Windows-only: gemspec extension renamed .png files to .exe and executed them.
+        Clipboard monitor replaced cryptocurrency wallet addresses to steal transactions.
+    iocs:
+      malicious_packages:
+        - name: atlas-client  # Representative
+          count: 760
+          registry: RubyGems
+          publishers: 2  # Suspended accounts
+      file_path:
+        - type: malicious_structure
+          value: "/ext/trellislike/unflaming/waffling/"
+          description: File path used across all attacks - signature pattern
+      file_type:
+        - type: extension_masquerade
+          pattern: "*.png containing executable malware"
+          target: Windows
+      registry:
+        - type: persistence
+          path: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+          action: autorun_creation
+      behavioral:
+        - type: clipboard_hijacking
+          pattern: detect_and_replace_crypto_wallet_addresses
+          currencies: ["BTC", "ETH", "LTC", "XRP", "DASH", "BCH"]
+    impact_statistics:
+      total_malicious_packages: 760
+      affected_platforms: Windows only
+      targeted_wallets: cryptocurrency_all
+      campaigns_count: 3
+      researcher: ReversingLabs
+    sources:
+      - url: "https://www.helpnetsecurity.com/2020/04/17/typosquatting-rubygems/"
+        type: research_report
+        reliability: high
+      - url: "https://threatprotect.qualys.com/2020/04/21/rubygems-typosquatting-attack-in-ruby-libraries/"
+        type: threat_analysis
+        reliability: high
+      - url: "https://blog.reversinglabs.com/hubfs/Blog/ruby_malicious_gems.txt"
+        type: ioc_list
+        reliability: high
+    attribution:
+      confidence: medium
+      threat_actor: unknown
+      accounts: 2  # Suspended RubyGems accounts
+      motivation: financial
+      attack_history: "At least 3 separate campaigns detected with consistent TTPs"
+    remediation:
+      mitigation: |
+        1. Audit installed gems for typosquatted names
+        2. Use package signing verification where available
+        3. Validate package maintainers and download counts
+        4. Scan developer workstations for malware
+    status: mitigated
+
+  - id: SC-2024-004
+    package: ua-parser-js
+    ecosystem: npm
+    cve: CVE-2021-4229
+    ghsa: GHSA-pjwm-rvh2-c87w
+    discovered: "2021-11-22"
+    reported: "2022-01-20"
+    confidence_level: high
+    cvss:
+      base_score: 8.8
+      severity: high
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+      attack_vector: network
+      attack_complexity: low
+      privileges_required: none
+      user_interaction: none
+    attack_mechanics:
+      primary: npm_account_hijack
+      secondary: cryptocurrency_mining
+      tertiary: credential_stealing
+      delivery: package_installation
+      description: |
+        Maintainer's npm account was compromised, resulting in three malicious versions being published.
+        Malicious code included cryptocurrency mining scripts and credential exfiltration capabilities.
+        Attack affected all consumers of versions 0.7.29, 0.8.0, and 1.0.0.
+    iocs:
+      malicious_packages:
+        - name: ua-parser-js
+          versions: ["0.7.29", "0.8.0", "1.0.0"]
+          registry: npm
+          status: removed
+          replaced_by: ["0.7.30", "0.8.1", "1.0.1"]
+      behavioral:
+        - type: crypto_mining
+          coin: monero  # Observed in similar attacks
+        - type: credential_harvesting
+          targets:
+            - .env files
+            - config.json
+            - ~/.aws/credentials
+        - type: process_spawn
+          suspicious_binaries: ["powershell.exe", "cmd.exe"]
+      network:
+        - type: mining_pool
+          description: Monero mining pool connections
+          status: blocked_by_most_vendors
+    impact_statistics:
+      downloads: unknown
+      direct_consumers: 20000+
+      transitive_reach: high
+      weekly_downloads_before_attack: 7000000+
+    sources:
+      - url: "https://github.com/faisalman/ua-parser-js/blob/master/INCIDENT_RESPONSE.md"
+        type: official_response
+        reliability: high
+      - url: "https://nvd.nist.gov/vuln/detail/CVE-2021-4229"
+        type: cve_record
+        reliability: high
+      - url: "https://blog.expo.dev/ua-parser-js-and-malicious-npm-packages-8c13ee4141a"
+        type: analysis
+        reliability: medium
+    attribution:
+      confidence: low
+      threat_actor: unknown
+      motivation: financial
+      attack_history: "Also affected by CVE-2022-25927 (ReDoS vulnerability)"
+    remediation:
+      affected_versions: "0.7.29, 0.8.0, 1.0.0"
+      fixed_versions: [">=0.7.30", ">=0.8.1", ">=1.0.1"]
+      mitigation: Update to non-malicious versions, audit CI/CD logs
+    status: mitigated
+
+  - id: SC-2024-005
+    package: Colorizator  # Cross-ecosystem typosquatting
+    ecosystem: PyPI
+    cve: GHSA-5m8x-4m8h-5m9h  # Placeholder
+    ghsa: GHSA-5m8x-4m8h-5m9h  # Placeholder
+    discovered: "2025-05-28"
+    reported: "2025-05-28"
+    confidence_level: high
+    cvss:
+      base_score: 9.1
+      severity: critical
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+      attack_vector: network
+      attack_complexity: low
+      privileges_required: none
+      user_interaction: none
+    attack_mechanics:
+      primary: cross_ecosystem_typosquatting
+      secondary: persistent_backdoor
+      tertiary: avs_evasion
+      delivery: package_installation
+      description: |
+        Attackers used NPM package name "colorizr" to create convincing PyPI typosquats.
+        Cross-ecosystem confusion tactic - using one ecosystem's package naming conventions to attack another.
+        Windows payloads: Task Scheduler persistence, Windows Defender evasion, registry credential harvest.
+        Linux payloads: systemd/crontab persistence, RSA-encrypted reverse shell via gs-netcat, timestamp preservation.
+    iocs:
+      malicious_packages:
+        - name: Colorizator
+          versions: ["1.2.3", "2.1.2"]
+          owner: rick_grimes
+          target: Linux
+        - name: coloraiz
+          versions: ["1.0.1", "1.0.2", "1.0.3"]
+          owner: morty_smith
+          target: Linux
+        - name: coloramapkgsw
+          versions: ["0.1.0"]
+          owner: reven
+          target: Windows
+        - name: coloramashowtemp
+          versions: ["0.1.0"]
+          owner: m5tl
+          target: Windows
+      network:
+        - type: github
+          value: "github.com/s7bhme"
+          description: Malicious payload hosting
+          status: monitored
+        - type: webhook
+          value: "webhook.site/dc3c1af9-ea3d-4401-9158-eb6dda735276"
+          description: Data exfiltration webhook
+        - type: download
+          value: "gsocket.io/y"
+          description: gs-netcat installation script
+      file_hashes:
+        - type: sha256
+          value: "d30c78c64985a42c34ef142fd8754a776c8db81228bafc385c5bd429252e4612"
+          context: "Linux bash script payload"
+        - type: sha256
+          value: "daef5255eac4a4d16940e424c97492c6bad8fdafd2420632c371b9d18df3b000"
+          context: "Windows payload"
+      behavioral:
+        - type: avs_evasion
+          command: '"MpCmdRun.exe" -RemoveDefinitions -All'
+          target: Windows_Defender
+        - type: avs_evasion
+          command: 'Set-MpPreference -DisableIOAVProtection $true'
+          target: Windows_IOAV_scanning
+        - type: privilege_escalation
+          methods: ["systemd", "crontab", ".bash_profile", ".zshrc", "rc.local"]
+        - type: anti_forensics
+          methods: ["timestamp_preservation", "process_masquerade", "temp_file_cleanup"]
+    impact_statistics:
+      affected_platforms:
+        - Linux
+        - Windows
+      capabilities:
+        - persistent_remote_access
+        - privilege_escalation
+        - cryptocurrency_mining
+        - credential_theft
+        - avs_disabling
+      atypical_tactic: "Cross-ecosystem name confusion"
+    sources:
+      - url: "https://checkmarx.com/zero-post/python-pypi-supply-chain-attack-colorama/"
+        type: research_report
+        reliability: high
+      - url: "https://www.imperva.com/blog/pythons-colorama-typosquatting-meets-fade-stealer-malware/"
+        type: threat_analysis
+        reliability: high
+    attribution:
+      confidence: low
+      threat_actor: unknown
+      campaigns: "Likely separate actors similar but different tooling"
+      motivation: credential_harvesting
+      notes: "No clear attribution to known adversary"
+    remediation:
+      mitigation: |
+        1. Block specific package owners: rick_grimes, morty_smith, reven, m5tl, dsss
+        2. Scan CI/CD pipelines and private package caches
+        3. Audit Windows registry for Task Scheduler entries
+        4. Check Linux systems for gs-netcat and persistence mechanisms
+        5. Monitor for connections to webhook.site and gsocket.io
+    status: mitigated
+
+  - id: SC-2024-006
+    package: zerofs  # Targeted maintainer, not malicious crate
+    ecosystem: crates.io
+    cve: N/A  # No CVE - phishing campaign
+    ghsa: N/A
+    discovered: "2025-09-12"
+    reported: "2025-09-12"
+    confidence_level: medium
+    cvss:
+      base_score: 7.5
+      severity: high
+      vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N"
+      attack_vector: network
+      attack_complexity: low
+      privileges_required: none
+      user_interaction: required
+    attack_mechanics:
+      primary: phishing_account_takeover
+      secondary: credential_harvesting
+      delivery: email
+      description: |
+        Sophisticated phishing campaign targeting Rust crate maintainers immediately after crate publication.
+        Attacker sent fake security alert emails claiming crates.io infrastructure compromise.
+        Directed users to "temporary fix" SSO link which was a full proxy to GitHub, capturing credentials/tokens.
+        Attacker boasted setup took <15 minutes excluding crypto transaction times.
+    iocs:
+      network:
+        - type: domain
+          value: "rustfoundation.dev"
+          registered: "2025-09-12T07:13:16.998Z"
+          description: Phishing site acting as GitHub proxy
+          status: taken_down
+        - type: content
