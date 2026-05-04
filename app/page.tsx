@@ -89,7 +89,7 @@ export default function Page() {
   useEffect(() => {
     async function loadIncidents() {
       try {
-        const response = await fetch('/incidents.yaml');
+        const response = await fetch('/supply-chain-threat-tracker/incidents.yaml');
         const yamlText = await response.text();
         const data = typesafeYaml.load(yamlText) as IncidentsData;
 
