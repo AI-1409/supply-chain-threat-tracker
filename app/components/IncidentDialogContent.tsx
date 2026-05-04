@@ -70,7 +70,9 @@ export default function IncidentDialogContent({ incident }: { incident: Incident
               {incident.cvss.severity} ({baseScore})
             </Badge>
             <Badge variant={getConfidenceColor(incident.confidence_level)}>
-              {incident.confidence_level}
+              {incident.confidence_level.charAt(0).toUpperCase() +
+                incident.confidence_level.slice(1)}{' '}
+              Confidence
             </Badge>
             {incident.cve !== 'N/A' && <Badge variant="outlined">{incident.cve}</Badge>}
             {incident.ghsa !== 'N/A' && <Badge variant="outlined">{incident.ghsa}</Badge>}
@@ -78,11 +80,11 @@ export default function IncidentDialogContent({ incident }: { incident: Incident
         </CardContent>
       </Card>
 
-      {/* Description Card */}
+      {/* Attack Mechanics Card - Contains incident details */}
       {incident.description && (
         <Card>
           <CardHeader>
-            <CardTitle>Description</CardTitle>
+            <CardTitle>Details</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{incident.description}</p>
@@ -117,7 +119,9 @@ export default function IncidentDialogContent({ incident }: { incident: Incident
           {incident.attack_mechanics.description && (
             <div className="mt-4">
               <div className="text-sm font-medium text-muted-foreground mb-2">Details</div>
-              <p className="text-sm text-gray-700">{incident.attack_mechanics.description}</p>
+              <p className="text-sm text-[var(--lsd-text-primary)] leading-relaxed">
+                {incident.attack_mechanics.description}
+              </p>
             </div>
           )}
         </CardContent>
@@ -223,29 +227,30 @@ export default function IncidentDialogContent({ incident }: { incident: Incident
           <CardTitle>Sources</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {incident.sources.map((source, index) => (
-              <a
-                key={index}
-                href={source.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-sm text-blue-600 hover:underline"
-              >
+              <div key={index} className="flex items-center gap-2">
                 <Badge
                   variant={
                     source.reliability === 'high'
-                      ? 'filled'
+                      ? 'success'
                       : source.reliability === 'medium'
                         ? 'warning'
                         : 'outlined'
                   }
                   size="sm"
                 >
-                  {source.reliability}
-                </Badge>{' '}
-                {source.type}: {source.url}
-              </a>
+                  {source.reliability.charAt(0).toUpperCase() + source.reliability.slice(1)}
+                </Badge>
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--lsd-primary)] hover:underline truncate"
+                >
+                  {source.url}
+                </a>
+              </div>
             ))}
           </div>
         </CardContent>

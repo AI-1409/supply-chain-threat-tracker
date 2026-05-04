@@ -1,6 +1,13 @@
 'use client';
 
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@nipsys/lsd';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@nipsys/lsd';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import type { Incident } from '../../data/types';
@@ -47,6 +54,9 @@ export default function IncidentDialog({ open, onOpenChange, incident }: Inciden
               </DialogClose>
             </div>
           </div>
+          <DialogDescription>
+            View detailed information about the {incident.package} incident in {incident.ecosystem}
+          </DialogDescription>
         </DialogHeader>
         <IncidentDialogContent incident={incident} />
       </DialogContent>

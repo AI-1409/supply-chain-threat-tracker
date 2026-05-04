@@ -116,10 +116,20 @@ export default function AppShell({
                           <SidebarMenuButton
                             isActive={selectedEcosystem === ecosystem}
                             onClick={() => handleEcosystemChange(ecosystem)}
-                            className="w-full justify-between"
+                            className={`w-full justify-between transition-colors ${
+                              selectedEcosystem === ecosystem
+                                ? 'bg-[var(--lsd-primary)] text-[var(--lsd-primary-foreground)] hover:bg-[var(--lsd-primary)] hover:text-[var(--lsd-primary-foreground)]'
+                                : 'hover:bg-[var(--lsd-accent)] hover:text-[var(--lsd-accent-foreground)]'
+                            }`}
                           >
                             <span>{ecosystem}</span>
-                            <span className="text-sm text-[var(--lsd-text-secondary)]">
+                            <span
+                              className={`text-sm ${
+                                selectedEcosystem === ecosystem
+                                  ? 'text-[var(--lsd-primary-foreground)]/80'
+                                  : 'text-[var(--lsd-text-secondary)]'
+                              }`}
+                            >
                               {count}
                             </span>
                           </SidebarMenuButton>
