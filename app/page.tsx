@@ -1,7 +1,7 @@
-import { IncidentsAppHydrated } from './components/IncidentsAppHydrated';
-import IncidentDashboard from './components/IncidentDashboard';
-import { getAllIncidents } from '../data/incidents';
 import { DEFAULT_FILTERS } from '../data/filters';
+import { getAllIncidents } from '../data/incidents';
+import IncidentDashboard from './components/IncidentDashboard';
+import { IncidentsAppHydrated } from './components/IncidentsAppHydrated';
 
 export default function Page() {
   // Load incidents on the server

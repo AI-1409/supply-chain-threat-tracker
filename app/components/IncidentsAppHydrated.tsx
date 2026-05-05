@@ -1,7 +1,11 @@
 'use client';
 
-import { useState, createContext, useContext } from 'react';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -12,13 +16,9 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '@nipsys/lsd';
 import { PackageIcon } from '@phosphor-icons/react';
+import { createContext, useContext, useState } from 'react';
 import {
   ATTACK_TYPE_OPTIONS,
   DATE_RANGE_OPTIONS,
@@ -30,7 +30,9 @@ import {
 } from '../../data/filters';
 import type { Incident } from '../../data/types';
 
-const FilterContext = createContext<{ filters: FilterState; onFiltersChange: (filters: FilterState) => void } | undefined>(undefined);
+const FilterContext = createContext<
+  { filters: FilterState; onFiltersChange: (filters: FilterState) => void } | undefined
+>(undefined);
 
 export function useFilters() {
   const context = useContext(FilterContext);
@@ -46,7 +48,11 @@ interface IncidentsAppHydratedProps {
   children: React.ReactNode;
 }
 
-export function IncidentsAppHydrated({ initialIncidents, initialFilters, children }: IncidentsAppHydratedProps) {
+export function IncidentsAppHydrated({
+  initialIncidents,
+  initialFilters,
+  children,
+}: IncidentsAppHydratedProps) {
   const [incidents, setIncidents] = useState<Incident[]>(initialIncidents);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
 
@@ -120,9 +126,7 @@ export function IncidentsAppHydrated({ initialIncidents, initialFilters, childre
                 <SidebarMenuItem>
                   <Select
                     value={filters.documentationQuality}
-                    onValueChange={value =>
-                      setFilters({ ...filters, documentationQuality: value })
-                    }
+                    onValueChange={value => setFilters({ ...filters, documentationQuality: value })}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select quality" />
@@ -198,9 +202,7 @@ export function IncidentsAppHydrated({ initialIncidents, initialFilters, childre
             <div className="w-10" />
           </header>
 
-          <main className="flex-1 overflow-y-auto p-(--lsd-spacing-base)">
-            {children}
-          </main>
+          <main className="flex-1 overflow-y-auto p-(--lsd-spacing-base)">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </FilterContext.Provider>

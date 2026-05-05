@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Badge,
   Button,
@@ -12,10 +11,11 @@ import {
   CardTitle,
 } from '@nipsys/lsd';
 import { ArrowRight } from '@phosphor-icons/react';
+import { useState } from 'react';
 import { filterIncidents } from '../../data/filter-utils';
 import type { Incident } from '../../data/types';
-import { useFilters } from './IncidentsAppHydrated';
 import IncidentDialog from './IncidentDialog';
+import { useFilters } from './IncidentsAppHydrated';
 
 interface IncidentDashboardProps {
   incidents: Incident[];
@@ -142,42 +142,27 @@ export default function IncidentDashboard({ incidents }: IncidentDashboardProps)
           </div>
           <div className="flex flex-wrap gap-2">
             {filters.ecosystem !== 'all' && (
-              <Badge
-                variant="outlined"
-                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
-              >
+              <Badge variant="outlined" className="cursor-pointer hover:bg-[var(--lsd-muted)]">
                 Ecosystem: {filters.ecosystem}
               </Badge>
             )}
             {filters.severity !== 'all' && (
-              <Badge
-                variant="outlined"
-                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
-              >
+              <Badge variant="outlined" className="cursor-pointer hover:bg-[var(--lsd-muted)]">
                 Severity: {filters.severity}
               </Badge>
             )}
             {filters.documentationQuality !== 'all' && (
-              <Badge
-                variant="outlined"
-                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
-              >
+              <Badge variant="outlined" className="cursor-pointer hover:bg-[var(--lsd-muted)]">
                 Quality: {filters.documentationQuality}
               </Badge>
             )}
             {filters.attackType !== 'all' && (
-              <Badge
-                variant="outlined"
-                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
-              >
+              <Badge variant="outlined" className="cursor-pointer hover:bg-[var(--lsd-muted)]">
                 Attack: {filters.attackType.replace(/_/g, ' ')}
               </Badge>
             )}
             {filters.dateRange !== 'all' && (
-              <Badge
-                variant="outlined"
-                className="cursor-pointer hover:bg-[var(--lsd-muted)]"
-              >
+              <Badge variant="outlined" className="cursor-pointer hover:bg-[var(--lsd-muted)]">
                 Date: {filters.dateRange}
               </Badge>
             )}
@@ -191,9 +176,7 @@ export default function IncidentDashboard({ incidents }: IncidentDashboardProps)
           <h2 className="text-lg font-semibold text-[var(--lsd-text-primary)]">
             {filteredIncidents.length} {filteredIncidents.length === 1 ? 'Incident' : 'Incidents'}
             {filteredIncidents.length !== incidents.length && (
-              <span className="text-[var(--lsd-text-secondary)]">
-                {' '}of {incidents.length} total
-              </span>
+              <span className="text-[var(--lsd-text-secondary)]"> of {incidents.length} total</span>
             )}
           </h2>
         </div>
